@@ -9,3 +9,7 @@ launch one robot with name, color, position and orientation:
 Launch the navigation node for mapping:
 
     roslaunch p_g06_navigation p_g06_navigation.launch map_file:="yaml file path"
+    
+Launch 3 robots of each color (blue, red and green):
+    
+    roslaunch p_g06_multi_robot multi_robot.launch
