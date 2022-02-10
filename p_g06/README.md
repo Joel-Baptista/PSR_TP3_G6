@@ -1,14 +1,14 @@
 Launch gazebo with game arena (alterado por Gonçalo):
 
-    **Lança arena 1 por defeito:**
+**Lança arena 1 por defeito:**
 
         roslaunch p_g06_bringup th_arenas.launch 
 
-    **Lançar arena 2:**
+**Lançar arena 2:**
 
         roslaunch p_g06_bringup th_arenas.launch arena:=2
 
-    **Lançar arena 3:**
+**Lançar arena 3:**
 
         roslaunch p_g06_bringup th_arenas.launch arena:=3
 
