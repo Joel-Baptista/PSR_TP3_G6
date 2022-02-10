@@ -1,6 +1,17 @@
-Launch gazebo with game arena:
+Launch gazebo with game arena (alterado por Gonçalo):
 
-    roslaunch p_g06_bringup th_arenas.launch 
+    **Lança arena 1 por defeito:**
+
+        roslaunch p_g06_bringup th_arenas.launch 
+
+    **Lançar arena 2:**
+
+        roslaunch p_g06_bringup th_arenas.launch arena:=2
+
+    **Lançar arena 3:**
+
+        roslaunch p_g06_bringup th_arenas.launch arena:=3
+
 
 launch one robot with name, color, position and orientation:
 
