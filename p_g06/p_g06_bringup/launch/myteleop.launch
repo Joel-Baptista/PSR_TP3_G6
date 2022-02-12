@@ -1,0 +1,14 @@
+<launch>
+    <arg name="player_name" default="p_g09"/>
+
+    <!-- Use a player_name namespace to get unique topic names, services, parameters, etc.-->
+    <group ns="$(arg player_name)">
+
+      <!-- turtlebot3_teleop_key penso que temos que criar um pkg novo para a navegação para colocar no node com navegação manual e automatica -->
+<!--      <node pkg="p_g09_sensors" type=".py" name="manual_drive"  output="screen">-->
+<!--          <remap from="/cmd_vel" to="/$(arg player_name)/cmd_vel"/>-->
+<!--      </node>-->
+
+    </group>
+
+</launch>

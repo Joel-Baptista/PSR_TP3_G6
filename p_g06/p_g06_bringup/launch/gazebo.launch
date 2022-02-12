@@ -8,3 +8,5 @@
         <arg name="debug" value="false"/>
     </include>
 </launch>
+
+<!--acho que se pode apagar este ficheiro launch porque temos o th_arenas.launch que o gonçalo criou-->
