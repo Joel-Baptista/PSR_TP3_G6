@@ -15,7 +15,7 @@ import tf2_geometry_msgs
 import tf2_ros
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Twist, PoseStamped, Point, Pose, Vector3, Quaternion
-from p_jbaptista_cv.msg import PlayerLocation
+from p_g06_sensors.msg import PlayerLocation
 
 class Camera:
     def __init__(self):
