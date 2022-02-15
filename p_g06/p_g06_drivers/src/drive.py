@@ -5,6 +5,7 @@ import math
 import rospy
 import tf2_ros
 from geometry_msgs.msg import Twist, PoseStamped
+from tf2_geometry_msgs import PoseStamped
 
 
 class Driver:
@@ -15,7 +16,7 @@ class Driver:
         self.speed = 0
 
         self.minimum_speed = 0.5
-        self.maximum_speed = 1.5
+        self.maximum_speed = 1
 
         self.name = rospy.get_name()
         self.name = self.name.strip('/')  # remove initial /
@@ -34,7 +35,6 @@ class Driver:
         self.goal_active = False
 
 
-
     def goalReceivedCallback(self, goal_msg):
 
         print('Received new goal ' + goal_msg.header.frame_id)
@@ -49,7 +49,7 @@ class Driver:
             rospy.logerr(
                 'Cant transform goal from ' + goal_msg.header.frame_id + ' to ' + target_frame + '. ingnoring this...')
 
-    def driveStraight(self, goal, minimum_speed=0.5 , maximum_speed=1.5):
+    def driveStraight(self):
 
         goal_copy = copy.deepcopy(self.goal)  # make sure we don't change the stamp field of the goal
         goal_copy.header.stamp = rospy.Time.now()
@@ -76,7 +76,7 @@ class Driver:
 
         twist = Twist()
         twist.linear.x = self.speed
-        twist.angular.z = self.angle
+        twist.angular.z =self.angle
         self.publisher_command.publish(twist)
 
     def computeDistancetoGoal(self, goal):
