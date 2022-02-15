@@ -11,6 +11,12 @@ class Driver:
 
     def __init__(self):
 
+        self.angle = 0
+        self.speed = 0
+
+        self.minimum_speed = 0.5
+        self.maximum_speed = 1.5
+
         self.name = rospy.get_name()
         self.name = self.name.strip('/')  # remove initial /
         print('Player name: ' + self.name)
@@ -20,18 +26,14 @@ class Driver:
         self.tf_buffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tf_buffer)
 
-        self.timer = rospy.Timer(rospy.Duration(0.01), self.sendCommandCallback)
+        self.timer = rospy.Timer(rospy.Duration(0.1), self.sendCommandCallback)
 
         self.goal_subscriber = rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.goalReceivedCallback)
 
         self.goal = PoseStamped()
         self.goal_active = False
 
-        self.angle = 0
-        self.speed = 0
 
-        self.minimum_speed = 0.5
-        self.maximum_speed = 3
 
     def goalReceivedCallback(self, goal_msg):
 
@@ -47,7 +49,8 @@ class Driver:
             rospy.logerr(
                 'Cant transform goal from ' + goal_msg.header.frame_id + ' to ' + target_frame + '. ingnoring this...')
 
-    def driveStraight(self, goal, minimum_speed=0.5 , maximum_speed=3):
+    def driveStraight(self, goal, minimum_speed=0.5 , maximum_speed=1.5):
+
         goal_copy = copy.deepcopy(self.goal)  # make sure we don't change the stamp field of the goal
         goal_copy.header.stamp = rospy.Time.now()
 

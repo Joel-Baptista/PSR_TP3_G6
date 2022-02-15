@@ -32,4 +32,8 @@
 
     </group>
 
+
+     <!--Include visualize.launch-->
+    <include file="$(find p_g06_bringup)/launch/visualize.launch">
+    </include>
 </launch>
