@@ -24,3 +24,7 @@ Lançar arena 3:
 **Launch 3 robots of each color (blue, red and green):**
     
     roslaunch p_g06_multi_robot multi_robot.launch
+    
+**Launch configured rviz (default = blue1):**
+
+    roslaunch p_g06_bringup visualize.launch player_name:=<robot name>
