@@ -1,8 +1,9 @@
 <launch>
+    <arg name="player_name" default="blue1"/>
 
-    <arg name="scan_topic" default="blue1/scan"/>
-    <arg name="base_frame" default="blue1/base_footprint"/>
-    <arg name="odom_frame" default="blue1/odom"/>
+    <arg name="scan_topic" default="$(arg player_name)/scan"/>
+    <arg name="base_frame" default="$(arg player_name)/base_footprint"/>
+    <arg name="odom_frame" default="$(arg player_name)/odom"/>
 
 
     <!--  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"></node>-->
