@@ -28,3 +28,8 @@ Lançar arena 3:
 **Launch configured rviz (default = blue1):**
 
     roslaunch p_g06_bringup visualize.launch player_name:=<robot name>
+    
+**Launch gmapping (default = blue1):**
+
+    roslaunch p_g06_bringup gmapping.launch player_name:=<robot name>
+
