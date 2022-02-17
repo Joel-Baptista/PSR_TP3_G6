@@ -132,8 +132,8 @@ Visualization Manager:
           Show Trail: false
           Value: true
       Name: RobotModel
-      Robot Description: red3/robot_description
-      TF Prefix: red3
+      Robot Description: blue1/robot_description
+      TF Prefix: blue1
       Update Interval: 0
       Value: true
       Visual Enabled: true
@@ -160,7 +160,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.05000000074505806
       Style: Spheres
-      Topic: /red3/scan
+      Topic: /blue1/scan
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -229,7 +229,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: red3/odom
+    Fixed Frame: blue1/odom
     Frame Rate: 30
   Name: root
   Tools:
