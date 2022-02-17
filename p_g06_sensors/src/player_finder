@@ -102,10 +102,17 @@ class Camera:
         idx = []
         teams = []
         locations = []
+        Xpixels = []
+        Ypixels = []
 
         for i, object in enumerate(Objects):
             idx.append(i)
             teams.append(object["team"])
+
+            centroid = np.mean(object["pixels"], axis=0)
+
+            Xpixels.append(int(centroid[0]))
+            Ypixels.append(int(centroid[1]))
 
             poseStamped = PoseStamped()
 
@@ -126,7 +133,10 @@ class Camera:
         p_loc.idx = idx
         p_loc.teams = teams
         p_loc.locations = locations
+        p_loc.Xpixel = Xpixels
+        p_loc.Ypixel = Ypixels
 
+        print(p_loc)
         self.publisher_location.publish(p_loc)
 
 
@@ -177,6 +187,7 @@ class Camera:
         self.img_gui = copy.deepcopy(self.img)
         key = cv2.waitKey(1)
 
+
         if len(self.LidarPoints) > 0:
             self.object_detection()
 
@@ -198,7 +209,6 @@ class Camera:
 
     def getLaserCallback(self, laser): # Gets Lidar 2D points from the robot's sensor
         self.LidarPoints = []
-
         lidar_array = np.empty((0, 3), float)
 
         for i, range in enumerate(laser.ranges):
@@ -333,7 +343,9 @@ class Camera:
             for lidar_pixel in objects_lidar_pixels:
                 x = int(lidar_pixel[0])
                 y = int(lidar_pixel[1])
-                mask_object[y][x] = 255
+
+                if x <= self.width - 1 and y <= self.height - 1:
+                    mask_object[y][x] = 255
 
                 cv2.circle(self.img_gui, (x, y), 2, (255, 0, 255), -1)
 

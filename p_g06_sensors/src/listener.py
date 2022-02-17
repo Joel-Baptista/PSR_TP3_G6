@@ -4,7 +4,7 @@ import argparse
 
 import rospy
 from std_msgs.msg import String
-from p_jbaptista_cv.msg import PlayerLocation
+from p_g06_sensors.msg import PlayerLocation
 import numpy as np
 import sys
 
@@ -17,9 +17,13 @@ def callbackMsgReceived(msg):
     for i in msg.idx:
         x = np.around(msg.locations[i].pose.position.x, 3)
         y = np.around(msg.locations[i].pose.position.y, 3)
+
+        xpix = msg.Xpixel[i]
+        ypix = msg.Ypixel[i]
+
         frame = msg.locations[i].header.frame_id
         rospy.loginfo("Player found number " + str(i + 1) + " is in team " + msg.teams[i] + " and in position (" + str(x) + "," + str(y) + ")"
-                      + " in the frame " + frame)
+                      + " in the frame " + frame + " and pixels at (" + str(xpix) + "," + str(ypix) + ").")
 
 def main():
     # ---------------------------------------------------
