@@ -1,5 +1,6 @@
 <launch>
 
+
     <!--    BLUE ROBOT 1-->
     <node name="Blue1_oriented_goal" pkg="oriented_goal" type="oriented_goal.py" output="screen">
         <param name="robot_name" value="blue1"/>

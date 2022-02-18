@@ -15,4 +15,6 @@
         <remap from="p_jfernandes/move_base_simple/goal" to="blue1/move_base_simple/goal"/>
     </node>
 
+
+
 </launch>
