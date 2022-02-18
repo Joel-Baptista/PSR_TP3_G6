@@ -14,9 +14,9 @@
     <!--    positions for amcl node-->
     <!--    <arg name="initial_pose_x" default="-1.0"/>-->
     <!--    <arg name="initial_pose_y" default="4.0"/>-->
-    <arg name="initial_pose_x" default="2.0"/>
-    <arg name="initial_pose_y" default="-1.0"/>
-    <arg name="initial_pose_a" default="3.1415"/>
+    <arg name="initial_pose_x" default="-8.0"/>
+    <arg name="initial_pose_y" default="0.0"/>
+    <arg name="initial_pose_a" default="0"/>
 
     <!--    argument for robot name-->
     <arg name="robot_namespace" default="blue1"/>

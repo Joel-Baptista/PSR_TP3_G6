@@ -25,7 +25,7 @@ green_ranges = {"b": {"min": 0, "max": 31}, "g": {"min": 243, "max": 255}, "r": 
 
 
 class Server:
-    def __init__(self, robot_color, show_camera_img=True):
+    def __init__(self, robot_color, show_camera_img=False):
         self.laser_data = None
         self.image_data = None
 

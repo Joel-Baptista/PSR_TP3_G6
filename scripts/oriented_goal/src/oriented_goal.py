@@ -23,7 +23,7 @@ distances_to_catch = []
 distances_to_escape = []
 
 # rate_hz = rospy.get_param("~rate")
-rate_hz = 0.5
+rate_hz = 2
 
 # nodes
 get_model_state = rospy.remap_name("/gazebo/get_model_state")
