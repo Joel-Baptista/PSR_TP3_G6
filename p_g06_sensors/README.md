@@ -2,7 +2,9 @@
 
 Lançamento do nó:
 
-        rosrun p_g06_sensors player_finder __name:= <input player name>
+        rosrun p_g06_sensors player_finder __name:= <input player name>_sensors
+
+Exemplo para o nome: blue1_sensors. Esta alteração foi necessária para não haver conflito com nomes
 
 **Description of message PlayerLocation**
 

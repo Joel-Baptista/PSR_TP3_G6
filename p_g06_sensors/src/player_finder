@@ -54,6 +54,9 @@ class Camera:
         self.name = rospy.get_name()
 
         self.name = self.name.strip("/")
+        idx = self.name.find("_", 0, len(self.name))
+
+        self.name = self.name[0:idx]
         print("My player name is " + self.name)
 
         topic_image = "/" + self.name + '/camera/rgb/image_raw'
