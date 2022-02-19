@@ -47,6 +47,10 @@ class Driver:
         print(self.players)
 
 
+    def chooseposition(self, players):
+        pass
+
+
 def main():
     # ---------------------------------------------------
     # INITIALIZATION
