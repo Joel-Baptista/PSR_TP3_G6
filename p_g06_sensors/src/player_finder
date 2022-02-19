@@ -184,9 +184,11 @@ class Camera:
         bridge = CvBridge()
         cv_img = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         cv_bgr = cv2.cvtColor(cv_img, cv2.COLOR_RGB2BGR)
+        cv_hsv= cv2.cvtColor(cv_img, cv2.COLOR_RGB2HSV)
+
         cv2.imshow(self.window_name, cv_bgr)
-        self.img = cv_bgr
-        self.img_gui = copy.deepcopy(self.img)
+        self.img = cv_hsv
+        self.img_gui = copy.deepcopy(cv_bgr)
         key = cv2.waitKey(1)
 
 
@@ -252,10 +254,19 @@ class Camera:
 
     def get_binary_mask(self):
 
-        mask_R = cv2.inRange(self.img, (0, 0, 100), (0, 0, 256))
-        mask_G = cv2.inRange(self.img, (0, 100, 0), (0, 256, 0))
-        mask_B = cv2.inRange(self.img, (100, 0, 0), (256, 0, 0))
+        # mask_R = cv2.inRange(self.img, (0, 0, 0), (0, 0, 6))
+        # mask_G = cv2.inRange(self.img, (0, 243, 0), (31, 4, 0))
+        # mask_B = cv2.inRange(self.img, (116, 0, 0), (146, 4, 6))
 
+        mask_R1 = cv2.inRange(self.img, (0, 150, 100), (21, 256, 256))
+        mask_R2 = cv2.inRange(self.img, (234, 150, 100), (256, 256, 256))
+        mask_R = cv2.bitwise_or(mask_R1, mask_R2)
+        mask_G = cv2.inRange(self.img, (42, 100, 100), (113, 256, 256))
+        mask_B = cv2.inRange(self.img, (100, 100, 100), (200, 256, 256))
+
+        # mask = cv2.inRange(self.img, (0, 150, 100), (21, 256, 256))
+        # cv2.imshow("mask", mask)
+        # masks = [mask, mask, mask]
         masks = [mask_B, mask_G, mask_R]
         final_masks = []
 

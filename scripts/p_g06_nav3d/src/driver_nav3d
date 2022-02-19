@@ -20,6 +20,8 @@ from p_g06_sensors.msg import PlayerLocation
 
 class Driver:
     def __init__(self):
+        self.players = []
+
         self.name = rospy.get_name()
 
         self.name = self.name.strip("/")
@@ -28,13 +30,29 @@ class Driver:
         self.name = self.name[0:idx]
         print("My player name is " + self.name)
 
+        topic_location = "/" + self.name + '/player_location'
+
+        print("I'm subscribing to " + topic_location)
+
+        self.subscriber_img = rospy.Subscriber(topic_location, PlayerLocation, self.getLocationCallback)  # Gets location from player_finder
+
+
+    def getLocationCallback(self, msg):
+        self.players = []
+        for i in msg.idx:
+            object = {"id": i, "pixels": (msg.Xpixel[i], msg.Ypixel[i]), "points": msg.locations[i], "team": msg.teams[i]}
+            self.players.append(object)
+
+
+        print(self.players)
+
 
 def main():
     # ---------------------------------------------------
     # INITIALIZATION
     # ---------------------------------------------------
 
-    rospy.init_node('Camera', anonymous=False)
+    rospy.init_node('Driver', anonymous=False)
 
     driver = Driver()
 
