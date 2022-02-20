@@ -289,7 +289,7 @@ class Server:
 
             # show images
             cv2.imshow("mask_to_catch", mask_to_catch)
-            cv2.imshow("edges", edges)
+            # cv2.imshow("edges", edges)
 
             cv2.imshow("mask_to_run", mask_to_run)
             cv2.imshow("mask_teammate", mask_teammate)

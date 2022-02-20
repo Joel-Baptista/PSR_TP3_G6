@@ -7,8 +7,8 @@
         <!--        <arg name="world_name" value="$(find th_description)/worlds/th_arena_3.world"/>-->
         <arg name="world_name" value="$(find th_description)/worlds/th_arena_$(arg arena).world"/>
         <arg name="paused" value="false"/>
-        <!--        use simulated time as false to use tf transformations-->
-        <arg name="use_sim_time" value="false"/>
+        <!--        if needed, use simulated time as false to allow tf transformations-->
+        <arg name="use_sim_time" value="true"/>
         <arg name="gui" value="true"/>
         <arg name="headless" value="false"/>
         <arg name="debug" value="false"/>
