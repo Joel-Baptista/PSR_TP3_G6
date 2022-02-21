@@ -19,13 +19,13 @@ camera_node = rospy.remap_name("blue1/camera/rgb/image_raw")
 lidar_node = rospy.remap_name("blue1/scan")
 
 # color ranges
-blue_ranges = {"b": {"min": 116, "max": 148}, "g": {"min": 0, "max": 4}, "r": {"min": 0, "max": 6}}
-red_ranges = {"b": {"min": 0, "max": 17}, "g": {"min": 0, "max": 25}, "r": {"min": 128, "max": 142}}
-green_ranges = {"b": {"min": 0, "max": 31}, "g": {"min": 243, "max": 255}, "r": {"min": 0, "max": 23}}
+blue_ranges = {"H": {"min": 115, "max": 129}, "S": {"min": 153, "max": 255}, "V": {"min": 84, "max": 174}}
+red_ranges = {"H": {"min": 0, "max": 179}, "S": {"min": 0, "max": 255}, "V": {"min": 110, "max": 167}}
+green_ranges = {"H": {"min": 55, "max": 63}, "S": {"min": 169, "max": 255}, "V": {"min": 187, "max": 255}}
 
 
 class Server:
-    def __init__(self, robot_color, show_camera_img=False):
+    def __init__(self, robot_color, show_camera_img=True):
         self.laser_data = None
         self.image_data = None
 
@@ -60,19 +60,19 @@ class Server:
 
         # numpy arrays
         self.lower_to_catch = np.array(
-            [self.ranges_to_catch['b']['min'], self.ranges_to_catch['g']['min'], self.ranges_to_catch['r']['min']])
+            [self.ranges_to_catch['H']['min'], self.ranges_to_catch['S']['min'], self.ranges_to_catch['V']['min']])
         self.upper_to_catch = np.array(
-            [self.ranges_to_catch['b']['max'], self.ranges_to_catch['g']['max'], self.ranges_to_catch['r']['max']])
+            [self.ranges_to_catch['H']['max'], self.ranges_to_catch['S']['max'], self.ranges_to_catch['V']['max']])
 
         self.lower_to_run = np.array(
-            [self.ranges_to_run['b']['min'], self.ranges_to_run['g']['min'], self.ranges_to_run['r']['min']])
+            [self.ranges_to_run['H']['min'], self.ranges_to_run['S']['min'], self.ranges_to_run['V']['min']])
         self.upper_to_run = np.array(
-            [self.ranges_to_run['b']['max'], self.ranges_to_run['g']['max'], self.ranges_to_run['r']['max']])
+            [self.ranges_to_run['H']['max'], self.ranges_to_run['S']['max'], self.ranges_to_run['V']['max']])
 
         self.lower_teammate = np.array(
-            [self.ranges_teammate['b']['min'], self.ranges_teammate['g']['min'], self.ranges_teammate['r']['min']])
+            [self.ranges_teammate['H']['min'], self.ranges_teammate['S']['min'], self.ranges_teammate['V']['min']])
         self.upper_teammate = np.array(
-            [self.ranges_teammate['b']['max'], self.ranges_teammate['g']['max'], self.ranges_teammate['r']['max']])
+            [self.ranges_teammate['H']['max'], self.ranges_teammate['S']['max'], self.ranges_teammate['V']['max']])
 
     def laser_callback(self, msg):
         self.laser_data = msg
@@ -170,12 +170,12 @@ class Server:
     def camera_navigation(self):
         # ***************** camera code *************
         img = self.bridge.imgmsg_to_cv2(self.image_data, desired_encoding='bgr8')
-        # hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         # masks
-        mask_to_catch = cv2.inRange(img, self.lower_to_catch, self.upper_to_catch)
-        mask_to_run = cv2.inRange(img, self.lower_to_run, self.upper_to_run)
-        mask_teammate = cv2.inRange(img, self.lower_teammate, self.upper_teammate)
+        mask_to_catch = cv2.inRange(hsv, self.lower_to_catch, self.upper_to_catch)
+        mask_to_run = cv2.inRange(hsv, self.lower_to_run, self.upper_to_run)
+        mask_teammate = cv2.inRange(hsv, self.lower_teammate, self.upper_teammate)
 
         # img dimensions
         height, width, dimension = img.shape
@@ -325,7 +325,10 @@ class Server:
 def main():
     rospy.init_node('camera_and_lidar')  # init node
     robot_color = rospy.get_param("~robot_color", default="Blue")  # robot color param
-    server = Server(robot_color)  # server object
+
+    camera_show = rospy.get_param("~camera_show", default="False")  # robot color param
+
+    server = Server(robot_color, show_camera_img=camera_show)  # server object
 
     # topics to subscriber
     rospy.Subscriber(lidar_node, LaserScan, server.laser_callback)
