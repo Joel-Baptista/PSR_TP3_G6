@@ -9,14 +9,14 @@ from sensor_msgs.msg import LaserScan
 from sensor_msgs.msg import Image
 
 # publisher
-cmd_vel_node = rospy.remap_name("p_jfernandes/cmd_vel")
+cmd_vel_node = rospy.remap_name("blue1/cmd_vel")
 cmd_vel_pub = rospy.Publisher(cmd_vel_node, Twist, queue_size=10)
 
 # camera node
-camera_node = rospy.remap_name("p_jfernandes/camera/rgb/image_raw")
+camera_node = rospy.remap_name("blue1/camera/rgb/image_raw")
 
 # lidar node
-lidar_node = rospy.remap_name("p_jfernandes/scan")
+lidar_node = rospy.remap_name("blue1/scan")
 
 # color ranges
 blue_ranges = {"b": {"min": 116, "max": 148}, "g": {"min": 0, "max": 4}, "r": {"min": 0, "max": 6}}
