@@ -20,7 +20,6 @@ from p_g06_sensors.msg import PlayerLocation
 
 class Driver:
     def __init__(self):
-        self.players = []
 
         self.name = rospy.get_name()
 
@@ -28,13 +27,50 @@ class Driver:
         idx = self.name.find("_", 0, len(self.name))
 
         self.name = self.name[0:idx]
-        print("My player name is " + self.name)
+
+        red_players = rospy.get_param("/red_players")
+        blue_players = rospy.get_param("/blue_players")
+        green_players = rospy.get_param("/green_players")
+
+        if self.name in red_players:
+            self.my_team, self.prey_team, self.hunter_team = "red", "green", "blue"
+            print("My name is " + self.name + ". I am team " + colorama.Fore.RED + self.my_team + colorama.Style.RESET_ALL + ".\nI am hunting "
+                  + colorama.Fore.GREEN + str(green_players) + colorama.Style.RESET_ALL +"\nand fleeing from " + colorama.Fore.BLUE
+                  + str(blue_players) + colorama.Style.RESET_ALL + ".")
+        elif self.name in green_players:
+            self.my_team, self.prey_team, self.hunter_team = "green", "blue", "blue"
+            print("My name is " + self.name + ". I am team " + colorama.Fore.GREEN + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
+                + colorama.Fore.GREEN + str(green_players) + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Fore.BLUE
+                  + str(blue_players) + colorama.Style.RESET_ALL + ".")
+        elif self.name in blue_players:
+            self.my_team, self.prey_team, self.hunter_team = "blue", "red", "green"
+            print("My name is " + self.name + ". I am team " + colorama.Fore.BLUE + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
+                + colorama.Fore.RED + str(red_players) + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Fore.GREEN +
+                  str(green_players) + colorama.Style.RESET_ALL + ".")
+        else:
+            self.my_team, self.prey_team, self.hunter_team = "None", "All", "None"
+            print("My name is " + self.name + ". I am team " + colorama.Fore.YELLOW + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
+                + colorama.Back.RED + "EVERYONE" + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Fore.GREEN +
+                "NO ONE. HIDE FROM ME IF YOU CAN" + colorama.Style.RESET_ALL + ".")
+
+        self.players = []
+
+        self.angle = 0
+        self.speed = 0
 
         topic_location = "/" + self.name + '/player_location'
+        topic_cmd_vel = "/" + self.name + '/cmd_vel'
 
         print("I'm subscribing to " + topic_location)
+        print("I'm publishing to " + topic_cmd_vel)
+
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
         self.subscriber_img = rospy.Subscriber(topic_location, PlayerLocation, self.getLocationCallback)  # Gets location from player_finder
+        self.publisher_cmd_vel = rospy.Publisher(topic_cmd_vel, Twist, queue_size=10)
+
+        self.timer = rospy.Timer(rospy.Duration(0.1), self.sendCommandCallback)
 
 
     def getLocationCallback(self, msg):
@@ -44,11 +80,32 @@ class Driver:
             self.players.append(object)
 
 
-        print(self.players)
+        # print(self.players[0])
+
+        self.choose_target(self.players)
+
+    def choose_target(self, players):
+        is_3d_pose = True
+
+        target = self.players[0]
+
+        x = target["points"].pose.position.x
+        y = target["points"].pose.position.y
+
+        dist = math.sqrt(x**2 + y**2)
+
+        if dist >= 0.001:
+            self.angle = math.atan2(y, x)
+            self.speed = 1
 
 
-    def chooseposition(self, players):
-        pass
+    def sendCommandCallback(self, event):
+
+        twist = Twist()
+        twist.linear.x = self.speed
+        twist.angular.z = self.angle
+
+        self.publisher_cmd_vel.publish(twist)
 
 
 def main():
@@ -59,6 +116,7 @@ def main():
     rospy.init_node('Driver', anonymous=False)
 
     driver = Driver()
+
 
     rospy.spin()
 

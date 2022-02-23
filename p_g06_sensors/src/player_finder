@@ -258,8 +258,8 @@ class Camera:
         # mask_G = cv2.inRange(self.img, (0, 243, 0), (31, 4, 0))
         # mask_B = cv2.inRange(self.img, (116, 0, 0), (146, 4, 6))
 
-        mask_R1 = cv2.inRange(self.img, (0, 150, 100), (21, 256, 256))
-        mask_R2 = cv2.inRange(self.img, (234, 150, 100), (256, 256, 256))
+        mask_R1 = cv2.inRange(self.img, (0, 200, 100), (21, 256, 256))
+        mask_R2 = cv2.inRange(self.img, (256, 150, 100), (256, 256, 256))
         mask_R = cv2.bitwise_or(mask_R1, mask_R2)
         mask_G = cv2.inRange(self.img, (42, 100, 100), (113, 256, 256))
         mask_B = cv2.inRange(self.img, (100, 100, 100), (200, 256, 256))
@@ -372,7 +372,7 @@ class Camera:
 
                         cv2.circle(self.img_gui, (x, y), 2, (255, 0, 255), -1)
 
-                        if x <= self.width - 1 and y <= self.height - 1:
+                        if (0 <= x <= self.width - 1) and (0 <= y <= self.height - 1):
                             mask_object[y][x] = 255
 
                     cond = cv2.bitwise_and(p_mask.astype(np.uint8), mask_object)
