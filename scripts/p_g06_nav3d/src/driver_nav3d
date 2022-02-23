@@ -28,6 +28,7 @@ class Driver:
 
         self.name = self.name[0:idx]
 
+        self.state = 0 # 0 - netrual, 1 - hunting, 2 - fleeing
         red_players = rospy.get_param("/red_players")
         blue_players = rospy.get_param("/blue_players")
         green_players = rospy.get_param("/green_players")
@@ -50,15 +51,19 @@ class Driver:
         else:
             self.my_team, self.prey_team, self.hunter_team = "None", "All", "None"
             print("My name is " + self.name + ". I am team " + colorama.Fore.YELLOW + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
-                + colorama.Back.RED + "EVERYONE" + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Fore.GREEN +
+                + colorama.Back.RED + "EVERYONE" + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Back.RED +
                 "NO ONE. HIDE FROM ME IF YOU CAN" + colorama.Style.RESET_ALL + ".")
 
-        self.players = []
+        self.players_3d = []
+        self.players_2d = []
+
+        self.target_3d = PoseStamped()
+        self.target_2d = (0, 0)
 
         self.angle = 0
         self.speed = 0
 
-        self.target = {}
+        # self.target = {"id": 0, "pixels": (0, 0), "points": PoseStamped(), "use_3d": False, "team": "None"}
 
         topic_location = "/" + self.name + '/player_location'
         topic_cmd_vel = "/" + self.name + '/cmd_vel'
@@ -91,7 +96,9 @@ class Driver:
 
 
     def getLocationCallback(self, msg):
-        self.players = []
+        self.players_3d = []
+        self.players_2d = []
+
         for i in msg.idx:
             player_3d_loc = self.tf_buffer.transform(msg.locations[i], self.name + "/odom", rospy.Duration(1))
 
@@ -101,54 +108,71 @@ class Driver:
             dist = math.sqrt(x ** 2 + y ** 2)
 
             if dist >= 0.001:
-                use = True
+                object = {"points": player_3d_loc, "team": msg.teams[i]}
+                self.players_3d.append(object)
             else:
-                use = False
+                object = {"pixels": (msg.Xpixel[i], msg.Ypixel[i]), "team": msg.teams[i], "area": msg.Area[i]}
+                self.players_2d.append(object)
 
-            object = {"id": i, "pixels": (msg.Xpixel[i], msg.Ypixel[i]), "points": player_3d_loc,"use_3d": use,"team": msg.teams[i]}
-            self.players.append(object)
+    def choose_target(self, players_3d, players_2d):
+        self.target_3d = None
+        self.target_2d = None
+        target_3d = PoseStamped()
+        target_2d = (0, 0)
+        if len(players_3d) > 0:
+            dist_min = 1000
+            for player_3d in players_3d:
+                player_3d_pose = player_3d["points"]
 
-        # print(self.players[0])
-        # print(self.players)
+                x = player_3d_pose.pose.position.x
+                y = player_3d_pose.pose.position.y
 
+                dist = math.sqrt(x ** 2 + y ** 2)
 
-    def choose_target(self, players):
-        is_3d_pose = True
+                if dist < dist_min:
+                    target_3d = player_3d_pose
+                    dist_min = dist
 
-        if len(self.players) > 0:
-            self.target = self.players[0]
+            self.target_3d = target_3d
+            self.state = 1
+        elif len(players_2d) > 0:
+            area_min = self.width * self.height * 2
 
-        if len(self.target) > 0:
-            target_copy = copy.deepcopy(self.target)
+            for player_2d in players_2d:
+                if player_2d["area"] < area_min:
+                    area_min = player_2d["area"]
+                    target_2d = player_2d["pixels"]
 
-            target_3d_loc = self.tf_buffer.transform(target_copy["points"], self.name + "/base_footprint", rospy.Duration(1))
+            self.target_2d = target_2d
+            self.state = 1
+        else:
+            self.state = 0
 
-            x = target_3d_loc.pose.position.x
-            y = target_3d_loc.pose.position.y
+    def drive_straight(self):
 
+        if not (self.target_3d is None):
+            goal = copy.deepcopy(self.target_3d)
+            goal.header.stamp = rospy.Time.now()
+            goal_in_baselink = self.tf_buffer.transform(goal, self.name + "/base_footprint", rospy.Duration(1))
 
-            x_pix = target_copy["pixels"][0]
-            y_pix = target_copy["pixels"][1]
+            x = goal_in_baselink.pose.position.x
+            y = goal_in_baselink.pose.position.y
 
-            if target_copy["use_3d"]:
-                self.angle = math.atan2(y, x)
-                self.speed = 1
+            print("Going to (" + str(round(x, 2)) + "," + str(round(y, 2)) + ").")
 
-                print("Moving to (" + str(round(x, 2)) + "," + str(round(y, 2)) + ") in relation to the player, using sensors")
-            else:
-                error = x_pix - self.width/2
+            self.angle = math.atan2(y, x)
+            self.speed = 0.5
+        elif not (self.target_2d is None):
+            self.speed = 1
 
-                print("Moving to (" + str(round(x_pix, 0)) + "," + str(round(y_pix, 0)) + ") in relation to the player, using camera")
-
-                k = 2*math.pi/self.width
-
-                self.angle = k * error
-                self.speed = 0.5
 
 
     def sendCommandCallback(self, event):
 
-        self.choose_target(self.players)
+        self.choose_target(self.players_3d, self.players_2d)
+
+        if self.state == 1:
+            self.drive_straight()
 
         twist = Twist()
         twist.linear.x = self.speed

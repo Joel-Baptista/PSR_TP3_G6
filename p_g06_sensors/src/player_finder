@@ -107,6 +107,7 @@ class Camera:
         locations = []
         Xpixels = []
         Ypixels = []
+        Area = []
 
         for i, object in enumerate(Objects):
             idx.append(i)
@@ -133,11 +134,16 @@ class Camera:
 
             locations.append(poseStamped)
 
+            contourArea = int(round(object["area"], 0))
+
+            Area.append(contourArea)
+
         p_loc.idx = idx
         p_loc.teams = teams
         p_loc.locations = locations
         p_loc.Xpixel = Xpixels
         p_loc.Ypixel = Ypixels
+        p_loc.Area = Area
 
         self.publisher_location.publish(p_loc)
 
@@ -385,7 +391,7 @@ class Camera:
                         cond = cv2.bitwise_and(p_mask.astype(np.uint8), mask_object)
 
                         if np.sum(cond > 0) == np.sum(mask_object > 0):
-                            object = {"id": i, "pixels": objects_lidar_pixels, "points": lidar_points, "team": self.team[k]}
+                            object = {"id": i, "pixels": objects_lidar_pixels, "points": lidar_points, "team": self.team[k], "area": cv2.contourArea(contour)}
                             self.Objects.append(object)
                             break
 
@@ -397,7 +403,7 @@ class Camera:
                     pixels = np.array([[cX, cY], [cX, cY]])
                     lidar = np.array([[0, 0, 0], [0, 0, 0]])
 
-                    object = {"id": i, "pixels": pixels, "points": lidar, "team": self.team[k]}
+                    object = {"id": i, "pixels": pixels, "points": lidar, "team": self.team[k], "area": cv2.contourArea(contour)}
                     self.Objects.append(object)
 
         cv2.imshow("window", self.img_gui)
