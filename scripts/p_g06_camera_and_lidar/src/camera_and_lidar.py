@@ -18,10 +18,15 @@ camera_node = rospy.remap_name("blue1/camera/rgb/image_raw")
 # lidar node
 lidar_node = rospy.remap_name("blue1/scan")
 
-# color ranges
-blue_ranges = {"H": {"min": 115, "max": 129}, "S": {"min": 153, "max": 255}, "V": {"min": 84, "max": 174}}
-red_ranges = {"H": {"min": 0, "max": 179}, "S": {"min": 0, "max": 255}, "V": {"min": 110, "max": 167}}
-green_ranges = {"H": {"min": 55, "max": 63}, "S": {"min": 169, "max": 255}, "V": {"min": 187, "max": 255}}
+# # color ranges BGR
+# blue_ranges = {"b": {"min": 116, "max": 148}, "g": {"min": 0, "max": 4}, "r": {"min": 0, "max": 6}}
+# red_ranges = {"b": {"min": 0, "max": 17}, "g": {"min": 0, "max": 25}, "r": {"min": 128, "max": 142}}
+# green_ranges = {"b": {"min": 0, "max": 31}, "g": {"min": 243, "max": 255}, "r": {"min": 0, "max": 23}}
+
+# color ranges HSV
+blue_ranges = {"H": {"min": 117, "max": 126}, "S": {"min": 235, "max": 255}, "V": {"min": 98, "max": 255}}
+red_ranges = {"H": {"min": 0, "max": 8}, "S": {"min": 171, "max": 255}, "V": {"min": 90, "max": 223}}
+green_ranges = {"H": {"min": 58, "max": 70}, "S": {"min": 104, "max": 253}, "V": {"min": 45, "max": 160}}
 
 
 class Server:
@@ -58,7 +63,23 @@ class Server:
             self.ranges_to_run = blue_ranges
             self.ranges_teammate = red_ranges
 
-        # numpy arrays
+        # # numpy arrays BGR
+        # self.lower_to_catch = np.array(
+        #     [self.ranges_to_catch['b']['min'], self.ranges_to_catch['g']['min'], self.ranges_to_catch['r']['min']])
+        # self.upper_to_catch = np.array(
+        #     [self.ranges_to_catch['b']['max'], self.ranges_to_catch['g']['max'], self.ranges_to_catch['r']['max']])
+        #
+        # self.lower_to_run = np.array(
+        #     [self.ranges_to_run['b']['min'], self.ranges_to_run['g']['min'], self.ranges_to_run['r']['min']])
+        # self.upper_to_run = np.array(
+        #     [self.ranges_to_run['b']['max'], self.ranges_to_run['g']['max'], self.ranges_to_run['r']['max']])
+        #
+        # self.lower_teammate = np.array(
+        #     [self.ranges_teammate['b']['min'], self.ranges_teammate['g']['min'], self.ranges_teammate['r']['min']])
+        # self.upper_teammate = np.array(
+        #     [self.ranges_teammate['b']['max'], self.ranges_teammate['g']['max'], self.ranges_teammate['r']['max']])
+
+        # numpy arrays HSV
         self.lower_to_catch = np.array(
             [self.ranges_to_catch['H']['min'], self.ranges_to_catch['S']['min'], self.ranges_to_catch['V']['min']])
         self.upper_to_catch = np.array(
@@ -173,6 +194,11 @@ class Server:
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         # masks
+        # mask_to_catch = cv2.inRange(img, self.lower_to_catch, self.upper_to_catch)
+        # mask_to_run = cv2.inRange(img, self.lower_to_run, self.upper_to_run)
+        # mask_teammate = cv2.inRange(img, self.lower_teammate, self.upper_teammate)
+
+        # masks
         mask_to_catch = cv2.inRange(hsv, self.lower_to_catch, self.upper_to_catch)
         mask_to_run = cv2.inRange(hsv, self.lower_to_run, self.upper_to_run)
         mask_teammate = cv2.inRange(hsv, self.lower_teammate, self.upper_teammate)
@@ -222,8 +248,8 @@ class Server:
                 x, y, w, h = cv2.boundingRect(c)
 
                 # draw the biggest contour (c) in green
-                cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 255), 2)
-                cv2.putText(edges, '+', (int(x+w/2), int(y+h/2)), cv2.FONT_ITALIC, 2, (255, 0, 0), 2, cv2.LINE_8)
+                cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), 3)
+                cv2.putText(edges, '+', (int(x+w/2), int(y+h/2)), cv2.FONT_ITALIC, 2, (0, 0, 255), 2, cv2.LINE_8)
 
                 cx_to_catch = int(x+w/2)
                 cy_to_catch = int(y+h/2)
@@ -231,7 +257,7 @@ class Server:
                 cx_to_catch = int(M_to_catch['m10'] / M_to_catch['m00'])
                 cy_to_catch = int(M_to_catch['m01'] / M_to_catch['m00'])
                 # cv2.circle(img, (cx_to_catch, cy_to_catch), 20, (0, 0, 255), -1)
-                cv2.putText(edges, '+', (cx_to_catch, cy_to_catch), cv2.FONT_ITALIC, 2, (255, 0, 0), 2, cv2.LINE_8)
+                cv2.putText(edges, '+', (cx_to_catch, cy_to_catch), cv2.FONT_ITALIC, 2, (0, 0, 255), 2, cv2.LINE_8)
 
             # find center
             threshold = cx_to_catch - width / 2
@@ -256,7 +282,26 @@ class Server:
 
             cx_to_run = int(M_to_run['m10'] / M_to_run['m00'])
             cy_to_run = int(M_to_run['m01'] / M_to_run['m00'])
-            cv2.circle(img, (cx_to_run, cy_to_run), 20, (255, 0, 0), -1)
+            # cv2.circle(img, (cx_to_run, cy_to_run), 20, (255, 0, 0), -1)
+
+            # edges = cv2.Canny(mask_to_run, 100, 200)
+            edges = cv2.GaussianBlur(mask_to_run, (7, 7), 2)
+            kernel = np.ones((7, 7), np.uint8)
+            edges = cv2.morphologyEx(edges, cv2.MORPH_OPEN, kernel)
+            edges = cv2.medianBlur(edges, 9)
+            edges = cv2.dilate(edges, kernel, iterations=4)
+            kernel = np.ones((9, 9), np.uint8)
+            edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+
+            contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+            if len(contours) != 0:
+
+                c = max(contours, key=cv2.contourArea)
+                x, y, w, h = cv2.boundingRect(c)
+
+                cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 3)
+                cv2.putText(edges, '+', (int(x+w/2), int(y+h/2)), cv2.FONT_ITALIC, 2, (0, 255, 0), 2, cv2.LINE_8)
 
             # escape from the robot
             self.robot_to_escape = True
@@ -271,8 +316,27 @@ class Server:
 
             cx_teammate = int(M_teammate['m10'] / M_teammate['m00'])
             cy_teammate = int(M_teammate['m01'] / M_teammate['m00'])
-            cv2.circle(img, (cx_teammate, cy_teammate), 20, (255, 0, 0), -1)
-            
+            # cv2.circle(img, (cx_teammate, cy_teammate), 20, (255, 0, 0), -1)
+
+            # edges = cv2.Canny(mask_teammate, 100, 200)
+            edges = cv2.GaussianBlur(mask_teammate, (7, 7), 2)
+            kernel = np.ones((7, 7), np.uint8)
+            edges = cv2.morphologyEx(edges, cv2.MORPH_OPEN, kernel)
+            edges = cv2.medianBlur(edges, 9)
+            edges = cv2.dilate(edges, kernel, iterations=4)
+            kernel = np.ones((9, 9), np.uint8)
+            edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+
+            contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+            if len(contours) != 0:
+
+                c = max(contours, key=cv2.contourArea)
+                x, y, w, h = cv2.boundingRect(c)
+
+                cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 3)
+                cv2.putText(edges, '+', (int(x+w/2), int(y+h/2)), cv2.FONT_ITALIC, 2, (255, 0, 0), 2, cv2.LINE_8)
+
             # keep teammates apart from each other
             self.robot_teammate = True
             self.turn = 550
@@ -326,9 +390,7 @@ def main():
     rospy.init_node('camera_and_lidar')  # init node
     robot_color = rospy.get_param("~robot_color", default="Blue")  # robot color param
 
-    camera_show = rospy.get_param("~camera_show", default="False")  # robot color param
-
-    server = Server(robot_color, show_camera_img=camera_show)  # server object
+    server = Server(robot_color)  # server object
 
     # topics to subscriber
     rospy.Subscriber(lidar_node, LaserScan, server.laser_callback)

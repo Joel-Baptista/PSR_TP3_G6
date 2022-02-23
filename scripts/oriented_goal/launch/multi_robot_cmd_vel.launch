@@ -2,7 +2,9 @@
 
 
     <!--    BLUE ROBOT 1-->
-    <node name="Blue1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">
+    <!--    <node name="Blue1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">-->
+    <node name="Blue1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
+
         <param name="robot_name" value="blue1"/>
         <param name="robot_to_catch_1" value="red1"/>
         <param name="robot_to_catch_2" value="red2"/>

@@ -351,7 +351,7 @@ def main():
 
             # create a pointstamp position equal to the robot to catch position to fed intro tf transformation
             goal_to_catch_present_time = PointStamped()
-            goal_to_catch_present_time.header.stamp = rospy.Time.now()
+            goal_to_catch_present_time.header.stamp = rospy.Time(0)
             goal_to_catch_present_time.header.frame_id = robot_name + "/odom"
             goal_to_catch_present_time.point.x = goal_to_catch.pose.position.x
             goal_to_catch_present_time.point.y = goal_to_catch.pose.position.y
@@ -420,7 +420,7 @@ def main():
 
             # create a pointstamp position equal to the robot to escape position to fed intro tf transformation
             goal_to_escape_present_time = PointStamped()
-            goal_to_escape_present_time.header.stamp = rospy.Time.now()
+            goal_to_escape_present_time.header.stamp = rospy.Time(0)
             goal_to_escape_present_time.header.frame_id = robot_name + "/odom"
             goal_to_escape_present_time.point.x = goal_to_escape.pose.position.x
             goal_to_escape_present_time.point.y = goal_to_escape.pose.position.y
