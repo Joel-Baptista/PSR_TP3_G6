@@ -58,8 +58,11 @@ class Driver:
         self.angle = 0
         self.speed = 0
 
+        self.target = {}
+
         topic_location = "/" + self.name + '/player_location'
         topic_cmd_vel = "/" + self.name + '/cmd_vel'
+        topic_camera = "/" + self.name + '/camera/rgb/camera_info'
 
         print("I'm subscribing to " + topic_location)
         print("I'm publishing to " + topic_cmd_vel)
@@ -67,44 +70,93 @@ class Driver:
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
-        self.subscriber_img = rospy.Subscriber(topic_location, PlayerLocation, self.getLocationCallback)  # Gets location from player_finder
+        self.subscriber_camera = rospy.Subscriber(topic_camera, CameraInfo, self.getCameraInfoCallback)  # Gets parameters from camera
+
+        self.subscriber_player_location = rospy.Subscriber(topic_location, PlayerLocation, self.getLocationCallback)  # Gets location from player_finder
         self.publisher_cmd_vel = rospy.Publisher(topic_cmd_vel, Twist, queue_size=10)
 
         self.timer = rospy.Timer(rospy.Duration(0.1), self.sendCommandCallback)
+
+    def getCameraInfoCallback(self, msg): # Gets the camera parameters from the robot's camera
+        try:
+            self.height = msg.height
+            self.width = msg.width
+
+            self.camera_info_exist = True
+
+        except(tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+            self.camera_info_exist = False
+            rospy.logerr("Could not get camera parameters.")
+
 
 
     def getLocationCallback(self, msg):
         self.players = []
         for i in msg.idx:
-            object = {"id": i, "pixels": (msg.Xpixel[i], msg.Ypixel[i]), "points": msg.locations[i], "team": msg.teams[i]}
+            player_3d_loc = self.tf_buffer.transform(msg.locations[i], self.name + "/odom", rospy.Duration(1))
+
+            x = msg.locations[i].pose.position.x
+            y = msg.locations[i].pose.position.y
+
+            dist = math.sqrt(x ** 2 + y ** 2)
+
+            if dist >= 0.001:
+                use = True
+            else:
+                use = False
+
+            object = {"id": i, "pixels": (msg.Xpixel[i], msg.Ypixel[i]), "points": player_3d_loc,"use_3d": use,"team": msg.teams[i]}
             self.players.append(object)
 
-
         # print(self.players[0])
+        # print(self.players)
 
-        self.choose_target(self.players)
 
     def choose_target(self, players):
         is_3d_pose = True
 
-        target = self.players[0]
+        if len(self.players) > 0:
+            self.target = self.players[0]
 
-        x = target["points"].pose.position.x
-        y = target["points"].pose.position.y
+        if len(self.target) > 0:
+            target_copy = copy.deepcopy(self.target)
 
-        dist = math.sqrt(x**2 + y**2)
+            target_3d_loc = self.tf_buffer.transform(target_copy["points"], self.name + "/base_footprint", rospy.Duration(1))
 
-        if dist >= 0.001:
-            self.angle = math.atan2(y, x)
-            self.speed = 1
+            x = target_3d_loc.pose.position.x
+            y = target_3d_loc.pose.position.y
+
+
+            x_pix = target_copy["pixels"][0]
+            y_pix = target_copy["pixels"][1]
+
+            if target_copy["use_3d"]:
+                self.angle = math.atan2(y, x)
+                self.speed = 1
+
+                print("Moving to (" + str(round(x, 2)) + "," + str(round(y, 2)) + ") in relation to the player, using sensors")
+            else:
+                error = x_pix - self.width/2
+
+                print("Moving to (" + str(round(x_pix, 0)) + "," + str(round(y_pix, 0)) + ") in relation to the player, using camera")
+
+                k = 2*math.pi/self.width
+
+                self.angle = k * error
+                self.speed = 0.5
 
 
     def sendCommandCallback(self, event):
+
+        self.choose_target(self.players)
 
         twist = Twist()
         twist.linear.x = self.speed
         twist.angular.z = self.angle
 
+        # print("linear: " + str(self.speed) + "\nangular: " + str(self.angle))
+
+        # print(twist)
         self.publisher_cmd_vel.publish(twist)
 
 

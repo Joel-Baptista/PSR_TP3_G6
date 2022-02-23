@@ -192,8 +192,8 @@ class Camera:
         key = cv2.waitKey(1)
 
 
-        if len(self.LidarPoints) > 0:
-            self.object_detection()
+
+        self.object_detection()
 
 
     def getCameraInfoCallback(self, msg): # Gets the camera parameters from the robot's camera
@@ -348,6 +348,14 @@ class Camera:
         masks = self.get_binary_mask()
         self.Objects = []
 
+        for i, lidar_points in enumerate(objects_lidar_points):
+            if len(objects_lidar_points[0]) > 0:
+                objects_lidar_pixels = self.points_to_pixels(lidar_points)
+                for lidar_pixel in objects_lidar_pixels:
+                    x = int(lidar_pixel[0])
+                    y = int(lidar_pixel[1])
+                    cv2.circle(self.img_gui, (x, y), 2, (255, 0, 255), -1)
+
         for k, mask in enumerate(masks):
 
             contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  # finds objects
@@ -361,26 +369,25 @@ class Camera:
 
                 object = {}
 
-                for j, lidar_points in enumerate(objects_lidar_points):
+                if len(objects_lidar_points[0]) > 0:
+                    for j, lidar_points in enumerate(objects_lidar_points):
 
-                    objects_lidar_pixels = self.points_to_pixels(lidar_points)
-                    mask_object = np.zeros(masks[0].shape).astype(np.uint8)
+                        objects_lidar_pixels = self.points_to_pixels(lidar_points)
+                        mask_object = np.zeros(masks[0].shape).astype(np.uint8)
 
-                    for lidar_pixel in objects_lidar_pixels:
-                        x = int(lidar_pixel[0])
-                        y = int(lidar_pixel[1])
+                        for lidar_pixel in objects_lidar_pixels:
+                            x = int(lidar_pixel[0])
+                            y = int(lidar_pixel[1])
 
-                        cv2.circle(self.img_gui, (x, y), 2, (255, 0, 255), -1)
+                            if (0 <= x <= self.width - 1) and (0 <= y <= self.height - 1):
+                                mask_object[y][x] = 255
 
-                        if (0 <= x <= self.width - 1) and (0 <= y <= self.height - 1):
-                            mask_object[y][x] = 255
+                        cond = cv2.bitwise_and(p_mask.astype(np.uint8), mask_object)
 
-                    cond = cv2.bitwise_and(p_mask.astype(np.uint8), mask_object)
-
-                    if np.sum(cond > 0) == np.sum(mask_object > 0):
-                        object = {"id": i, "pixels": objects_lidar_pixels, "points": lidar_points, "team": self.team[k]}
-                        self.Objects.append(object)
-                        break
+                        if np.sum(cond > 0) == np.sum(mask_object > 0):
+                            object = {"id": i, "pixels": objects_lidar_pixels, "points": lidar_points, "team": self.team[k]}
+                            self.Objects.append(object)
+                            break
 
                 if len(object) == 0:
                     M = cv2.moments(contour)  # Finds the object's moments
@@ -412,6 +419,7 @@ class Camera:
             z = lidar_point.pose.position.z
 
             dist = math.sqrt((x - x_prev) ** 2 + (y - y_prev) ** 2)
+
             if dist > tresh:
                 if i > 0:
                     points_list.append(array_points)

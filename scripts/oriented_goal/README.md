@@ -11,20 +11,11 @@ Funcionamento:
 
 Todos os algoritmos de decisão precisam de ser melhorados, pois contêm muitas falhas.
 
-Já detetadas:
-1. Quando existem objetos somento à frente (ex: parede reta), o robô vai virar por defeito para a esquerda (arbitrário), caso contrário iria parar de se mover porque não tinha condição que o fizesse decidir para qual lado virar!
-2. Como a arena tem coordenadas positivas e negativas fica complicado dizer ao robô para onde fugir quando está próximo de um verde
-    Neste momento ele faz isto: 
-   1. Verde em (x,y), Azul vai para (x - 5, y) quando x é positivo
-   2. Verde em (x, y), Azul vai para (x + 5, y) quando x é negativo
-3. (...)
-
 This script subscribe to:
-1. /gazebo/get_model_state -> get position of all robots (GPS alike)
-2. /blue1/scan -> get reads from the lidar to avoid obstacles
+1. /\<player>/player_location -> get position of that can see (with or withou sensors)
 
 publish on:
-1. /blue1/cmd_vel -> to control the motor wheels
+1. /\<player>/cmd_vel -> to control the motor wheels
 
 **Launch gazebo with game arena:**
 
@@ -38,6 +29,17 @@ publish on:
 
     rosrun th_referee th_referee
 
-**Launch the script for one robot (blue1):**
+**Launch the script for the sensors:**
 
-    roslaunch oriented_goal one_robot_cmd_vel.launch 
+    rosrun p_g06_sensors player_finder __name:=<playe>_sensors
+
+**Launch the script for the navigation:**
+
+    rosrun p_g06_sensors driver_nav3d __name:=<player>_nav3d
+
+**(MAYEBE)Launch the script for the navigation:**
+    
+Só usar se for necessário imobilizar o robô. Apenas será usado em fase de teste e desenvolvimento de código
+
+    rosrun p_g06_sensors driver_nav3d __name:=<player>_reset
+
