@@ -145,6 +145,8 @@ class Camera:
         p_loc.Ypixel = Ypixels
         p_loc.Area = Area
 
+        print("Sending Location...")
+
         self.publisher_location.publish(p_loc)
 
 

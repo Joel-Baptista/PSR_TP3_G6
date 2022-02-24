@@ -10,7 +10,7 @@ from operator import itemgetter
 import rospy
 import copy
 from sensor_msgs.msg import Image, LaserScan, CameraInfo
-from std_msgs.msg import Header, ColorRGBA
+from std_msgs.msg import Header, ColorRGBA, Float64
 import tf2_geometry_msgs
 import tf2_ros
 from visualization_msgs.msg import Marker, MarkerArray
@@ -28,29 +28,36 @@ class Driver:
 
         self.name = self.name[0:idx]
 
-        self.state = 0 # 0 - netrual, 1 - hunting, 2 - fleeing
+        self.state = 0  # 0 - netrual, 1 - hunting, 2 - fleeing
         red_players = rospy.get_param("/red_players")
         blue_players = rospy.get_param("/blue_players")
         green_players = rospy.get_param("/green_players")
 
         if self.name in red_players:
             self.my_team, self.prey_team, self.hunter_team = "Red", "Green", "Blue"
-            print("My name is " + self.name + ". I am team " + colorama.Fore.RED + self.my_team + colorama.Style.RESET_ALL + ".\nI am hunting "
-                  + colorama.Fore.GREEN + str(green_players) + colorama.Style.RESET_ALL +"\nand fleeing from " + colorama.Fore.BLUE
-                  + str(blue_players) + colorama.Style.RESET_ALL + ".")
+            print(
+                "My name is " + self.name + ". I am team " + colorama.Fore.RED + self.my_team + colorama.Style.RESET_ALL + ".\nI am hunting "
+                + colorama.Fore.GREEN + str(
+                    green_players) + colorama.Style.RESET_ALL + "\nand fleeing from " + colorama.Fore.BLUE
+                + str(blue_players) + colorama.Style.RESET_ALL + ".")
         elif self.name in green_players:
             self.my_team, self.prey_team, self.hunter_team = "Green", "Blue", "Red"
-            print("My name is " + self.name + ". I am team " + colorama.Fore.GREEN + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
-                + colorama.Fore.GREEN + str(green_players) + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Fore.BLUE
-                  + str(blue_players) + colorama.Style.RESET_ALL + ".")
+            print(
+                "My name is " + self.name + ". I am team " + colorama.Fore.GREEN + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
+                + colorama.Fore.GREEN + str(
+                    green_players) + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Fore.BLUE
+                + str(blue_players) + colorama.Style.RESET_ALL + ".")
         elif self.name in blue_players:
             self.my_team, self.prey_team, self.hunter_team = "Blue", "Red", "Green"
-            print("My name is " + self.name + ". I am team " + colorama.Fore.BLUE + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
-                + colorama.Fore.RED + str(red_players) + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Fore.GREEN +
-                  str(green_players) + colorama.Style.RESET_ALL + ".")
+            print(
+                "My name is " + self.name + ". I am team " + colorama.Fore.BLUE + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
+                + colorama.Fore.RED + str(
+                    red_players) + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Fore.GREEN +
+                str(green_players) + colorama.Style.RESET_ALL + ".")
         else:
             self.my_team, self.prey_team, self.hunter_team = "None", "All", "None"
-            print("My name is " + self.name + ". I am team " + colorama.Fore.YELLOW + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
+            print(
+                "My name is " + self.name + ". I am team " + colorama.Fore.YELLOW + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
                 + colorama.Back.RED + "EVERYONE" + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Back.RED +
                 "NO ONE. HIDE FROM ME IF YOU CAN" + colorama.Style.RESET_ALL + ".")
 
@@ -74,14 +81,16 @@ class Driver:
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
-        self.subscriber_camera = rospy.Subscriber(topic_camera, CameraInfo, self.getCameraInfoCallback)  # Gets parameters from camera
+        self.subscriber_camera = rospy.Subscriber(topic_camera, CameraInfo,
+                                                  self.getCameraInfoCallback)  # Gets parameters from camera
 
-        self.subscriber_player_location = rospy.Subscriber(topic_location, PlayerLocation, self.getLocationCallback)  # Gets location from player_finder
+        self.subscriber_player_location = rospy.Subscriber(topic_location, PlayerLocation,
+                                                           self.getLocationCallback)  # Gets location from player_finder
         self.publisher_cmd_vel = rospy.Publisher(topic_cmd_vel, Twist, queue_size=10)
 
         # self.timer = rospy.Timer(rospy.Duration(0.1), self.sendCommandCallback)
 
-    def getCameraInfoCallback(self, msg): # Gets the camera parameters from the robot's camera
+    def getCameraInfoCallback(self, msg):  # Gets the camera parameters from the robot's camera
         try:
             self.height = msg.height
             self.width = msg.width
@@ -92,10 +101,8 @@ class Driver:
             self.camera_info_exist = False
             rospy.logerr("Could not get camera parameters.")
 
-
-
     def getLocationCallback(self, msg):
-        self.players_3d = []
+        self.players = []
         self.players_2d = []
 
         for i in msg.idx:
@@ -107,13 +114,19 @@ class Driver:
             dist = math.sqrt(x ** 2 + y ** 2)
 
             if dist >= 0.001:
-                object = {"points": player_3d_loc, "team": msg.teams[i]}
-                self.players_3d.append(object)
-            else:
-                object = {"pixels": (msg.Xpixel[i], msg.Ypixel[i]), "team": msg.teams[i], "area": msg.Area[i]}
-                self.players_2d.append(object)
+                player = {"points": player_3d_loc, "pixels": None, "team": msg.teams[i], "area": None}
 
-        self.choose_target(self.players_3d, self.players_2d)
+            else:
+                player = {"points": None, "pixels": (msg.Xpixel[i], msg.Ypixel[i]), "team": msg.teams[i],
+                          "area": msg.Area[i]}
+
+            self.players.append(player)
+
+        redefine = self.redefine_target(self.players)
+
+        if redefine:
+            print(colorama.Fore.RED +"Need to choose target" + colorama.Style.RESET_ALL)
+            self.choose_target(self.players)
 
         if self.state == 1:
             print("Hunting!!")
@@ -127,7 +140,6 @@ class Driver:
             print("Running!!")
             self.drive_run()
 
-
         twist = Twist()
         twist.linear.x = self.speed
         twist.angular.z = self.angle
@@ -137,19 +149,31 @@ class Driver:
         # print(twist)
         self.publisher_cmd_vel.publish(twist)
 
-    def choose_target(self, players_3d, players_2d):
+    def redefine_target(self, players):
+        redefine = False
+
+        if self.state == 0:
+            redefine = True
+
+        return redefine
+
+    def choose_target(self, players):
+        prev_goal = copy.deepcopy(self.goal)
         self.goal = None
         target_3d = None
         target_2d = None
 
-        if len(players_3d) > 0:
-            dist_min = 1000
-            for player_3d in players_3d:
-                if player_3d["team"] == self.prey_team:
-                    player_3d_pose = player_3d["points"]
+        dist_min = 1000
+        area_max = 0
 
-                    x = player_3d_pose.pose.position.x
-                    y = player_3d_pose.pose.position.y
+        for player in players:
+            if player["pixels"] is None:
+                if player["team"] == self.prey_team:
+
+                    player_3d_pose = self.tf_buffer.transform(player["points"], self.name + "/odom", rospy.Duration(1))
+
+                    x = player["points"].pose.position.x
+                    y = player["points"].pose.position.y
 
                     dist = math.sqrt(x ** 2 + y ** 2)
 
@@ -157,7 +181,7 @@ class Driver:
                         target_3d = player_3d_pose
                         dist_min = dist
 
-                if player_3d["team"] == self.hunter_team:
+                if player["team"] == self.hunter_team:
                     poseStamped = PoseStamped()
                     poseStamped.header.frame_id = self.name + "/base_footprint"
                     poseStamped.header.stamp = rospy.Time.now()
@@ -165,23 +189,19 @@ class Driver:
                     poseStamped.pose.position.x = -4
                     poseStamped.pose.position.y = 0
 
-                    self.goal = poseStamped
+                    target_3d = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
+                    dist_min = -1
                     self.state = 2
-                    break
 
-            if self.goal is None:
-                self.goal = target_3d
-                self.state = 1
+            if player["points"] is None:
+                if player["team"] == self.prey_team and player["area"] > area_max:
+                    area_max = player["area"]
+                    target_2d = player["pixels"]
 
-        if len(players_2d) > 0 and self.goal is None:
-
-            area_max = 0
-
-            for player_2d in players_2d:
-                if player_2d["team"] == self.prey_team and player_2d["area"] > area_max:
-                    area_max = player_2d["area"]
-                    target_2d = player_2d["pixels"]
-
+        if dist_min >= 0 and target_3d is not None:
+            self.goal = target_3d
+            self.state = 1
+        elif dist_min >= 0 and target_3d is None and target_2d is not None:
             poseStamped = PoseStamped()
             poseStamped.header.frame_id = self.name + "/base_footprint"
             poseStamped.header.stamp = rospy.Time.now()
@@ -196,18 +216,79 @@ class Driver:
             poseStamped.pose.position.x = 4 * math.cos(angle)
             poseStamped.pose.position.y = 4 * math.sin(angle)
 
-            self.goal = poseStamped
+            self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
 
             self.state = 1
-
-        if self.goal is None:
+        elif dist_min >= 0:
+            self.goal = prev_goal
             self.state = 0
 
+
+    # if len(players_3d) > 0:
+        #     dist_min = 1000
+        #     for player_3d in players_3d:
+        #         if player_3d["team"] == self.prey_team:
+        #             player_3d_pose = player_3d["points"]
+        #
+        #             x = player_3d_pose.pose.position.x
+        #             y = player_3d_pose.pose.position.y
+        #
+        #             dist = math.sqrt(x ** 2 + y ** 2)
+        #
+        #             if dist < dist_min:
+        #                 target_3d = player_3d_pose
+        #                 dist_min = dist
+        #
+        #         if player_3d["team"] == self.hunter_team:
+        #             poseStamped = PoseStamped()
+        #             poseStamped.header.frame_id = self.name + "/base_footprint"
+        #             poseStamped.header.stamp = rospy.Time.now()
+        #
+        #             poseStamped.pose.position.x = -4
+        #             poseStamped.pose.position.y = 0
+        #
+        #             self.goal = poseStamped
+        #             self.state = 2
+        #             break
+        #
+        #     if self.goal is None:
+        #         self.goal = target_3d
+        #         self.state = 1
+        #
+        # if len(players_2d) > 0 and self.goal is None:
+        #
+        #     area_max = 0
+        #
+        #     for player_2d in players_2d:
+        #         if player_2d["team"] == self.prey_team and player_2d["area"] > area_max:
+        #             area_max = player_2d["area"]
+        #             target_2d = player_2d["pixels"]
+        #
+        #     poseStamped = PoseStamped()
+        #     poseStamped.header.frame_id = self.name + "/base_footprint"
+        #     poseStamped.header.stamp = rospy.Time.now()
+        #
+        #     x_pix = target_2d[0]
+        #     k = math.pi / (10 * self.width)
+        #
+        #     error = (self.width / 2) - x_pix
+        #
+        #     angle = k * error
+        #
+        #     poseStamped.pose.position.x = 4 * math.cos(angle)
+        #     poseStamped.pose.position.y = 4 * math.sin(angle)
+        #
+        #     self.goal = poseStamped
+        #
+        #     self.state = 1
+        #
+        # if self.goal is None:
+        #     self.state = 0
 
     def drive_run(self):
 
         self.speed = 0.1
-        self.angle = math.pi/10
+        self.angle = math.pi / 10
 
     def drive_hunt(self):
 
@@ -223,8 +304,6 @@ class Driver:
         angle = math.atan2(y, x)
 
         self.speed, self.angle = self.linear_vs_angular(angle)
-
-
 
     def drive_random(self):
         self.speed = 0
@@ -243,6 +322,7 @@ class Driver:
 
         return linear, angular
 
+
 def main():
     # ---------------------------------------------------
     # INITIALIZATION
@@ -251,7 +331,6 @@ def main():
     rospy.init_node('Driver', anonymous=False)
 
     driver = Driver()
-
 
     rospy.spin()
 
