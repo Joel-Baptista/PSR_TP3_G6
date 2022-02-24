@@ -57,8 +57,7 @@ class Driver:
         self.players_3d = []
         self.players_2d = []
 
-        self.target_3d = PoseStamped()
-        self.target_2d = (0, 0)
+        self.goal = None
 
         self.angle = 0
         self.speed = 0
@@ -117,12 +116,17 @@ class Driver:
         self.choose_target(self.players_3d, self.players_2d)
 
         if self.state == 1:
-            # print("Hunting!!")
+            print("Hunting!!")
             self.drive_hunt()
 
         if self.state == 0:
             print("Stay still")
             self.drive_random()
+
+        if self.state == 2:
+            print("Running!!")
+            self.drive_run()
+
 
         twist = Twist()
         twist.linear.x = self.speed
@@ -133,12 +137,11 @@ class Driver:
         # print(twist)
         self.publisher_cmd_vel.publish(twist)
 
-
     def choose_target(self, players_3d, players_2d):
-        self.target_3d = None
-        self.target_2d = None
+        self.goal = None
         target_3d = None
         target_2d = None
+
         if len(players_3d) > 0:
             dist_min = 1000
             for player_3d in players_3d:
@@ -154,9 +157,23 @@ class Driver:
                         target_3d = player_3d_pose
                         dist_min = dist
 
-            self.target_3d = target_3d
-            self.state = 1
-        elif len(players_2d) > 0:
+                if player_3d["team"] == self.hunter_team:
+                    poseStamped = PoseStamped()
+                    poseStamped.header.frame_id = self.name + "/base_footprint"
+                    poseStamped.header.stamp = rospy.Time.now()
+
+                    poseStamped.pose.position.x = -4
+                    poseStamped.pose.position.y = 0
+
+                    self.goal = poseStamped
+                    self.state = 2
+                    break
+
+            if self.goal is None:
+                self.goal = target_3d
+                self.state = 1
+
+        if len(players_2d) > 0 and self.goal is None:
 
             area_max = 0
 
@@ -165,44 +182,48 @@ class Driver:
                     area_max = player_2d["area"]
                     target_2d = player_2d["pixels"]
 
-            self.target_2d = target_2d
+            poseStamped = PoseStamped()
+            poseStamped.header.frame_id = self.name + "/base_footprint"
+            poseStamped.header.stamp = rospy.Time.now()
+
+            x_pix = target_2d[0]
+            k = math.pi / (10 * self.width)
+
+            error = (self.width / 2) - x_pix
+
+            angle = k * error
+
+            poseStamped.pose.position.x = 4 * math.cos(angle)
+            poseStamped.pose.position.y = 4 * math.sin(angle)
+
+            self.goal = poseStamped
+
             self.state = 1
-        else:
+
+        if self.goal is None:
             self.state = 0
+
+
+    def drive_run(self):
+
+        self.speed = 0.1
+        self.angle = math.pi/10
 
     def drive_hunt(self):
 
-        if not (self.target_3d is None):
-            goal = copy.deepcopy(self.target_3d)
-            goal.header.stamp = rospy.Time.now()
-            goal_in_baselink = self.tf_buffer.transform(goal, self.name + "/base_footprint", rospy.Duration(1))
+        goal = copy.deepcopy(self.goal)
+        goal.header.stamp = rospy.Time.now()
+        goal_in_baselink = self.tf_buffer.transform(goal, self.name + "/base_footprint", rospy.Duration(1))
 
-            x = goal_in_baselink.pose.position.x
-            y = goal_in_baselink.pose.position.y
+        x = goal_in_baselink.pose.position.x
+        y = goal_in_baselink.pose.position.y
 
-            print("Going to (" + str(round(x, 2)) + "," + str(round(y, 2)) + ").")
+        print("Going to (" + str(round(x, 2)) + "," + str(round(y, 2)) + ").")
 
-            angle = math.atan2(y, x)
+        angle = math.atan2(y, x)
 
-            self.speed, self.angle = self.linear_vs_angular(angle)
+        self.speed, self.angle = self.linear_vs_angular(angle)
 
-        elif not (self.target_2d is None):
-
-            x_pix = self.target_2d[0]
-            y_pix = self.target_2d[1]
-
-            k = math.pi / (5 * self.width)
-
-            error = self.width/2 - x_pix
-
-            print("Error is " + str(error) + ".")
-            angle = k * error
-
-            self.speed, self.angle = self.linear_vs_angular(angle)
-
-        else:
-            self.speed = 0
-            self.angle = 0
 
 
     def drive_random(self):
