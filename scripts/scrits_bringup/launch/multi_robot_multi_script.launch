@@ -55,7 +55,9 @@
     <!--    *************************************************************-->
 
     <!--RED ROBOT-->
-    <node name="Red1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">
+    <!--    <node name="Red1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">-->
+    <node name="Red1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
+
         <param name="robot_name" value="red1"/>
         <param name="robot_teammate_2" value="red2"/>
         <param name="robot_teammate_3" value="red3"/>
@@ -75,7 +77,7 @@
         <remap from="/blue1/camera/rgb/image_raw" to="/red1/camera/rgb/image_raw"/>
     </node>
 
-    <node name="Red2_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">
+    <node name="Red2_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
         <param name="robot_name" value="red2"/>
         <param name="robot_teammate_2" value="red1"/>
         <param name="robot_teammate_3" value="red3"/>
@@ -95,7 +97,7 @@
         <remap from="/blue1/camera/rgb/image_raw" to="/red2/camera/rgb/image_raw"/>
     </node>
 
-    <node name="Red3_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">
+    <node name="Red3_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
         <param name="robot_name" value="red3"/>
         <param name="robot_teammate_2" value="red1"/>
         <param name="robot_teammate_3" value="red2"/>
