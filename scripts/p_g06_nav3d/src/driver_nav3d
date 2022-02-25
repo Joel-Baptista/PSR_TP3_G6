@@ -61,8 +61,7 @@ class Driver:
                 + colorama.Back.RED + "EVERYONE" + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Back.RED +
                 "NO ONE. HIDE FROM ME IF YOU CAN" + colorama.Style.RESET_ALL + ".")
 
-        self.players_3d = []
-        self.players_2d = []
+        self.players = []
 
         self.goal = None
 
@@ -90,33 +89,25 @@ class Driver:
 
         self.timer = rospy.Timer(rospy.Duration(0.1), self.sendCommandCallback)
 
+    def speed_correction(self, speed, angle):
+
+        speed_ajusted = speed * (1 - ((6 * abs(angle))/math.pi))
+
+        speed_ajusted = max(0, speed_ajusted)
+
+        angle_ajusted = min(math.pi/2, angle)
+        angle_ajusted = max(-math.pi/2, angle_ajusted)
+
+        return speed_ajusted, angle_ajusted
+
     def sendCommandCallback(self, event):
 
-        redefine = self.redefine_target(self.players)
-
-        if redefine:
-            print(colorama.Fore.RED + "Need to choose target" + colorama.Style.RESET_ALL)
-            self.choose_target(self.players)
-
-        if self.state == 1:
-            # print("Hunting!!")
-            self.drive_hunt()
-
-        if self.state == 0:
-            print("Stay still")
-            self.drive_random()
-
-        if self.state == 2:
-            print("Running!!")
-            self.drive_run()
-
         twist = Twist()
-        twist.linear.x = self.speed
-        twist.angular.z = self.angle
 
-        print("linear: " + str(self.speed) + "; angular: " + str(self.angle))
+        twist.linear.x, twist.angular.z = self.speed_correction(self.speed, self.angle)
 
-        # print(twist)
+        print("linear: " + str(twist.linear.x) + "; angular: " + str(twist.angular.z))
+
         self.publisher_cmd_vel.publish(twist)
 
     def getCameraInfoCallback(self, msg):  # Gets the camera parameters from the robot's camera
@@ -135,14 +126,10 @@ class Driver:
         self.players_2d = []
 
         for i in msg.idx:
+
             player_3d_loc = self.tf_buffer.transform(msg.locations[i], self.name + "/odom", rospy.Duration(1))
 
-            x = msg.locations[i].pose.position.x
-            y = msg.locations[i].pose.position.y
-
-            dist = math.sqrt(x ** 2 + y ** 2)
-
-            if dist >= 0.01:
+            if msg.pose3D[i]:
                 player = {"points": player_3d_loc, "pixels": None, "team": msg.teams[i], "area": None}
 
             else:
@@ -151,36 +138,23 @@ class Driver:
 
             self.players.append(player)
 
-        # redefine = self.redefine_target(self.players)
-        #
-        # if redefine:
-        #     print(colorama.Fore.RED +"Need to choose target" + colorama.Style.RESET_ALL)
-        #     self.choose_target(self.players)
-        #
-        #
-        #
-        # if self.state == 1:
-        #     print("Hunting!!")
-        #     self.drive_hunt()
-        #
-        # if self.state == 0:
-        #     print("Stay still")
-        #     self.drive_random()
-        #
-        # if self.state == 2:
-        #     print("Running!!")
-        #     self.drive_run()
-        #
-        #
-        #
-        # twist = Twist()
-        # twist.linear.x = self.speed
-        # twist.angular.z = self.angle
-        #
-        # print("linear: " + str(self.speed) + "\nangular: " + str(self.angle))
-        #
-        # # print(twist)
-        # self.publisher_cmd_vel.publish(twist)
+        redefine = self.redefine_target(self.players)
+
+        if redefine:
+            print(colorama.Fore.RED + "Need to choose target" + colorama.Style.RESET_ALL)
+            self.choose_target(self.players)
+
+        if self.state == 1:
+            # print("Hunting!!")
+            self.drive_hunt(0.8)
+
+        if self.state == 0:
+            print("Stay still")
+            self.drive_random()
+
+        if self.state == 2:
+            print("Running!!")
+            self.drive_run()
 
     def redefine_target(self, players):
         redefine = False
@@ -233,6 +207,7 @@ class Driver:
         area_max = 0
 
         for player in players:
+
             if player["pixels"] is None:
                 if player["team"] == self.prey_team:
 
@@ -248,6 +223,7 @@ class Driver:
                         dist_min = dist
 
                 if player["team"] == self.hunter_team:
+                    print("Found near hunter!!!")
                     poseStamped = PoseStamped()
                     poseStamped.header.frame_id = self.name + "/base_footprint"
                     poseStamped.header.stamp = rospy.Time.now()
@@ -265,15 +241,17 @@ class Driver:
                     target_2d = player["pixels"]
 
         if dist_min >= 0 and target_3d is not None:
+
             self.goal = target_3d
             self.state = 1
+
         elif dist_min >= 0 and target_3d is None and target_2d is not None:
             poseStamped = PoseStamped()
             poseStamped.header.frame_id = self.name + "/base_footprint"
             poseStamped.header.stamp = rospy.Time.now()
 
             x_pix = target_2d[0]
-            k = math.pi / (5 * self.width)
+            k = math.pi / self.width
 
             error = (self.width / 2) - x_pix
 
@@ -285,7 +263,10 @@ class Driver:
             self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
 
             self.state = 1
+
         elif dist_min >= 0:
+            print("Messed it up!!")
+            print(target_3d)
             self.goal = prev_goal
             self.state = 0
 
@@ -356,7 +337,7 @@ class Driver:
         self.speed = 0.1
         self.angle = math.pi / 10
 
-    def drive_hunt(self):
+    def drive_hunt(self, max_speed):
 
         goal = copy.deepcopy(self.goal)
         goal.header.stamp = rospy.Time.now()
@@ -365,28 +346,15 @@ class Driver:
         x = goal_in_baselink.pose.position.x
         y = goal_in_baselink.pose.position.y
 
-        print("Going to (" + str(round(x, 2)) + "," + str(round(y, 2)) + ").")
+        # print("Going to (" + str(round(x, 2)) + "," + str(round(y, 2)) + ").")
 
-        angle = math.atan2(y, x)
+        self.angle = math.atan2(y, x)
 
-        self.speed, self.angle = self.linear_vs_angular(angle)
+        self.speed = max_speed
 
     def drive_random(self):
         self.speed = 0
         self.angle = 0
-
-    def linear_vs_angular(self, angular):
-        if angular >= 0:
-            angular = min(angular, math.pi / 20)
-        else:
-            angular = - min(-angular, math.pi / 20)
-
-        if abs(angular) <= 0.005:
-            linear = 1
-        else:
-            linear = 0.8
-
-        return linear, angular
 
 
 def main():

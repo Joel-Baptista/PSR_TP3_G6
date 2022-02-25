@@ -17,6 +17,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Twist, PoseStamped, Point, Pose, Vector3, Quaternion
 from p_g06_sensors.msg import PlayerLocation
 
+
 class Camera:
     def __init__(self):
         # <==============================================================>
@@ -27,8 +28,8 @@ class Camera:
 
         self.window_name = 'CV_image'
 
-        self.kernel_lineY = np.ones((10, 1), np.uint8) # These are matrixs used for morfologic transformation
-        self.kernel_lineX = np.ones((1, 10), np.uint8) # applied on the binarized images
+        self.kernel_lineY = np.ones((10, 1), np.uint8)  # These are matrixs used for morfologic transformation
+        self.kernel_lineX = np.ones((1, 10), np.uint8)  # applied on the binarized images
         self.kernel_square = np.ones((3, 3), np.uint8)
 
         self.img = np.zeros((100, 200))
@@ -78,14 +79,18 @@ class Camera:
         # <-------------------SUBSCRIBERS INITIATION--------------------->
         # Subscribes to needed topics to retrieve necessary information
 
-        self.subscriber_img = rospy.Subscriber(topic_image, Image, self.getImageCallback) # Gets image from camera
-        self.subscriber_laser = rospy.Subscriber(topic_laser, LaserScan, self.getLaserCallback) # Gets points from laser
-        self.subscriber_camera = rospy.Subscriber(topic_camera, CameraInfo, self.getCameraInfoCallback) # Gets parameters from camera
+        self.subscriber_img = rospy.Subscriber(topic_image, Image, self.getImageCallback)  # Gets image from camera
+        self.subscriber_laser = rospy.Subscriber(topic_laser, LaserScan,
+                                                 self.getLaserCallback)  # Gets points from laser
+        self.subscriber_camera = rospy.Subscriber(topic_camera, CameraInfo,
+                                                  self.getCameraInfoCallback)  # Gets parameters from camera
 
         # <-------------------PUBLISHERS INITIATION--------------------->
         # Publishes information to topics
-        self.publisher_location = rospy.Publisher(topic_location, PlayerLocation, queue_size=10)  # Publishes markers to rviz to ensure that the data is correct
-        self.publisher_markers = rospy.Publisher(topic_marker, MarkerArray, queue_size=10) # Publishes markers to rviz to ensure that the data is correct
+        self.publisher_location = rospy.Publisher(topic_location, PlayerLocation,
+                                                  queue_size=10)  # Publishes markers to rviz to ensure that the data is correct
+        self.publisher_markers = rospy.Publisher(topic_marker, MarkerArray,
+                                                 queue_size=10)  # Publishes markers to rviz to ensure that the data is correct
         # self.timer = rospy.Timer(rospy.Duration(0.1), self.sendMarkersCallback)
         # self.timer_object_detection = rospy.Timer(rospy.Duration(0.1), self.object_detection())
         # <-------------------TF_LISTENER INITIATION--------------------->
@@ -108,6 +113,7 @@ class Camera:
         Xpixels = []
         Ypixels = []
         Area = []
+        position3D = []
 
         for i, object in enumerate(Objects):
             idx.append(i)
@@ -122,11 +128,27 @@ class Camera:
 
             poseStamped.header = Header(stamp=rospy.Time.now(), frame_id=self.name + "/camera_rgb_frame")
 
-            average_point = np.mean(object["points"], axis=0)
             point = Point()
-            point.x = average_point[0]
-            point.y = average_point[1]
-            point.z = average_point[2]
+
+            # print(object["points"])
+
+            if object["points"] is None:
+                point.x = 0
+                point.y = 0
+                point.z = 0
+
+                print("Far player")
+
+                position3D.append(False)
+            else:
+                average_point = np.mean(object["points"], axis=0)
+
+                point.x = average_point[0]
+                point.y = average_point[1]
+                point.z = average_point[2]
+                position3D.append(True)
+
+                print("Near player")
 
             quaternion = Quaternion(x=0, y=0, z=0, w=1)
 
@@ -144,67 +166,64 @@ class Camera:
         p_loc.Xpixel = Xpixels
         p_loc.Ypixel = Ypixels
         p_loc.Area = Area
+        p_loc.pose3D = position3D
 
         print("Sending Location...")
 
         self.publisher_location.publish(p_loc)
 
-
     def sendMarkersCallback(self, Objects):
         markers_array = MarkerArray()
 
         for i, object in enumerate(Objects):
+            if object["points"] is not None:
+                marker = Marker()
+                marker.ns = "cylinder" + str(i)
+                marker.header = Header(stamp=rospy.Time.now(), frame_id=self.name + "/camera_rgb_frame")
+                marker.type = Marker.CUBE
 
-            marker = Marker()
-            marker.ns = "cylinder" + str(i)
-            marker.header = Header(stamp=rospy.Time.now(), frame_id=self.name + "/camera_rgb_frame")
-            marker.type = Marker.CUBE
+                scale = Vector3(x=0.3, y=0.3, z=0.29)
+                marker.scale = scale
 
-            scale = Vector3(x=0.3, y=0.3, z=0.29)
-            marker.scale = scale
+                average_point = np.mean(object["points"], axis=0)
+                point = Point()
+                point.x = average_point[0]
+                point.y = average_point[1]
+                point.z = average_point[2]
 
-            average_point = np.mean(object["points"], axis=0)
-            point = Point()
-            point.x = average_point[0]
-            point.y = average_point[1]
-            point.z = average_point[2]
+                quaternion = Quaternion(x=0, y=0, z=0, w=1)
 
-            quaternion = Quaternion(x=0, y=0, z=0, w=1)
+                if object["team"] == "Red":
+                    color = ColorRGBA(r=1, g=0, b=0, a=0.3)
+                elif object["team"] == "Blue":
+                    color = ColorRGBA(r=0, g=0, b=1, a=0.3)
+                elif object["team"] == "Green":
+                    color = ColorRGBA(r=0, g=1, b=0, a=0.3)
+                else:
+                    color = ColorRGBA(r=1, g=0, b=1, a=0.3)
 
-            if object["team"] == "Red":
-                color = ColorRGBA(r=1, g=0, b=0, a=0.3)
-            elif object["team"] == "Blue":
-                color = ColorRGBA(r=0, g=0, b=1, a=0.3)
-            elif object["team"] == "Green":
-                color = ColorRGBA(r=0, g=1, b=0, a=0.3)
-            else:
-                color = ColorRGBA(r=1, g=0, b=1, a=0.3)
+                marker.color = color
 
-            marker.color = color
+                marker.pose = Pose(position=point, orientation=quaternion)
 
-            marker.pose = Pose(position=point, orientation=quaternion)
-
-            markers_array.markers.append(marker)
+                markers_array.markers.append(marker)
 
         self.publisher_markers.publish(markers_array)
 
-    def getImageCallback(self, img): # Gets image from robot's camera and coverts the image to be used by OpenCV
+    def getImageCallback(self, img):  # Gets image from robot's camera and coverts the image to be used by OpenCV
         bridge = CvBridge()
         cv_img = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         cv_bgr = cv2.cvtColor(cv_img, cv2.COLOR_RGB2BGR)
-        cv_hsv= cv2.cvtColor(cv_img, cv2.COLOR_RGB2HSV)
+        cv_hsv = cv2.cvtColor(cv_img, cv2.COLOR_RGB2HSV)
 
         cv2.imshow(self.window_name, cv_bgr)
         self.img = cv_hsv
         self.img_gui = copy.deepcopy(cv_bgr)
         key = cv2.waitKey(1)
 
-
-
         self.object_detection()
 
-
-    def getCameraInfoCallback(self, msg): # Gets the camera parameters from the robot's camera
+    def getCameraInfoCallback(self, msg):  # Gets the camera parameters from the robot's camera
         try:
             self.D = msg.D
             self.K = msg.K
@@ -218,8 +237,7 @@ class Camera:
             self.camera_info_exist = False
             rospy.logerr("Could not get camera parameters.")
 
-
-    def getLaserCallback(self, laser): # Gets Lidar 2D points from the robot's sensor
+    def getLaserCallback(self, laser):  # Gets Lidar 2D points from the robot's sensor
         self.LidarPoints = []
         lidar_array = np.empty((0, 3), float)
 
@@ -237,7 +255,6 @@ class Camera:
         lidar_array_sorted = sorted(lidar_array, key=itemgetter(1))
 
         for lidar_point in lidar_array_sorted:
-
             poseStamped = PoseStamped()
             point = Point()
 
@@ -279,11 +296,14 @@ class Camera:
         final_masks = []
 
         for mask in masks:
-
-            mask_dilation = cv2.dilate(mask, self.kernel_lineY, iterations=2)  # Dilates the mask in the Y-direction, because the robots are built by layers
-            mask_closing = cv2.morphologyEx(mask_dilation, cv2.MORPH_CLOSE, self.kernel_square)  # Closes the holes in the mask
-            mask_dilation = cv2.dilate(mask_closing, self.kernel_lineX, iterations=2)  # Dilates the mask in the X-direction to mantain the robot's shape
-            mask_erode = cv2.erode(mask_dilation, self.kernel_square, iterations=7)  # Because of all the previous dilations, an erode function is needed
+            mask_dilation = cv2.dilate(mask, self.kernel_lineY,
+                                       iterations=2)  # Dilates the mask in the Y-direction, because the robots are built by layers
+            mask_closing = cv2.morphologyEx(mask_dilation, cv2.MORPH_CLOSE,
+                                            self.kernel_square)  # Closes the holes in the mask
+            mask_dilation = cv2.dilate(mask_closing, self.kernel_lineX,
+                                       iterations=2)  # Dilates the mask in the X-direction to mantain the robot's shape
+            mask_erode = cv2.erode(mask_dilation, self.kernel_square,
+                                   iterations=7)  # Because of all the previous dilations, an erode function is needed
 
             final_masks.append(mask_erode)
 
@@ -307,9 +327,9 @@ class Camera:
             # As the Lidar points come in meters, and the cameras parameters are in milimeters, it was necessary to scale the values
             # The axis x, y and z also had to be switched because OpenCV and the frames of Lidar were not compatible
 
-            x = -lidarPoint[1]/1000
-            y = lidarPoint[2]/1000
-            z = lidarPoint[0]/1000
+            x = -lidarPoint[1] / 1000
+            y = lidarPoint[2] / 1000
+            z = lidarPoint[0] / 1000
 
             vector_lidarPoint = np.array([x, y, z])
 
@@ -392,8 +412,9 @@ class Camera:
 
                         cond = cv2.bitwise_and(p_mask.astype(np.uint8), mask_object)
 
-                        if np.sum(cond > 0) == np.sum(mask_object > 0):
-                            object = {"id": i, "pixels": objects_lidar_pixels, "points": lidar_points, "team": self.team[k], "area": cv2.contourArea(contour)}
+                        if np.sum(cond > 0) == np.sum(mask_object > 0) and np.sum(cond > 0) > 0:
+                            object = {"id": i, "pixels": objects_lidar_pixels, "points": lidar_points,
+                                      "team": self.team[k], "area": cv2.contourArea(contour)}
                             self.Objects.append(object)
                             break
 
@@ -403,9 +424,9 @@ class Camera:
                     cY = int(M['m01'] / M['m00'])
 
                     pixels = np.array([[cX, cY], [cX, cY]])
-                    lidar = np.array([[0, 0, 0], [0, 0, 0]])
 
-                    object = {"id": i, "pixels": pixels, "points": lidar, "team": self.team[k], "area": cv2.contourArea(contour)}
+                    object = {"id": i, "pixels": pixels, "points": None, "team": self.team[k],
+                              "area": cv2.contourArea(contour)}
                     self.Objects.append(object)
 
         cv2.imshow("window", self.img_gui)
@@ -441,6 +462,7 @@ class Camera:
         points_list.append(array_points)
 
         return points_list
+
 
 def main():
     # ---------------------------------------------------

@@ -4,3 +4,4 @@ geometry_msgs/PoseStamped[] locations
 int64[] Xpixel
 int64[] Ypixel
 int64[] Area
+bool[] pose3D
