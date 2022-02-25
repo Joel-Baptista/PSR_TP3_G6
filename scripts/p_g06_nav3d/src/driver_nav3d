@@ -88,7 +88,36 @@ class Driver:
                                                            self.getLocationCallback)  # Gets location from player_finder
         self.publisher_cmd_vel = rospy.Publisher(topic_cmd_vel, Twist, queue_size=10)
 
-        # self.timer = rospy.Timer(rospy.Duration(0.1), self.sendCommandCallback)
+        self.timer = rospy.Timer(rospy.Duration(0.1), self.sendCommandCallback)
+
+    def sendCommandCallback(self, event):
+
+        redefine = self.redefine_target(self.players)
+
+        if redefine:
+            print(colorama.Fore.RED + "Need to choose target" + colorama.Style.RESET_ALL)
+            self.choose_target(self.players)
+
+        if self.state == 1:
+            # print("Hunting!!")
+            self.drive_hunt()
+
+        if self.state == 0:
+            print("Stay still")
+            self.drive_random()
+
+        if self.state == 2:
+            print("Running!!")
+            self.drive_run()
+
+        twist = Twist()
+        twist.linear.x = self.speed
+        twist.angular.z = self.angle
+
+        print("linear: " + str(self.speed) + "; angular: " + str(self.angle))
+
+        # print(twist)
+        self.publisher_cmd_vel.publish(twist)
 
     def getCameraInfoCallback(self, msg):  # Gets the camera parameters from the robot's camera
         try:
@@ -113,7 +142,7 @@ class Driver:
 
             dist = math.sqrt(x ** 2 + y ** 2)
 
-            if dist >= 0.001:
+            if dist >= 0.01:
                 player = {"points": player_3d_loc, "pixels": None, "team": msg.teams[i], "area": None}
 
             else:
@@ -122,38 +151,75 @@ class Driver:
 
             self.players.append(player)
 
-        redefine = self.redefine_target(self.players)
-
-        if redefine:
-            print(colorama.Fore.RED +"Need to choose target" + colorama.Style.RESET_ALL)
-            self.choose_target(self.players)
-
-        if self.state == 1:
-            print("Hunting!!")
-            self.drive_hunt()
-
-        if self.state == 0:
-            print("Stay still")
-            self.drive_random()
-
-        if self.state == 2:
-            print("Running!!")
-            self.drive_run()
-
-        twist = Twist()
-        twist.linear.x = self.speed
-        twist.angular.z = self.angle
-
-        print("linear: " + str(self.speed) + "\nangular: " + str(self.angle))
-
-        # print(twist)
-        self.publisher_cmd_vel.publish(twist)
+        # redefine = self.redefine_target(self.players)
+        #
+        # if redefine:
+        #     print(colorama.Fore.RED +"Need to choose target" + colorama.Style.RESET_ALL)
+        #     self.choose_target(self.players)
+        #
+        #
+        #
+        # if self.state == 1:
+        #     print("Hunting!!")
+        #     self.drive_hunt()
+        #
+        # if self.state == 0:
+        #     print("Stay still")
+        #     self.drive_random()
+        #
+        # if self.state == 2:
+        #     print("Running!!")
+        #     self.drive_run()
+        #
+        #
+        #
+        # twist = Twist()
+        # twist.linear.x = self.speed
+        # twist.angular.z = self.angle
+        #
+        # print("linear: " + str(self.speed) + "\nangular: " + str(self.angle))
+        #
+        # # print(twist)
+        # self.publisher_cmd_vel.publish(twist)
 
     def redefine_target(self, players):
         redefine = False
 
         if self.state == 0:
             redefine = True
+
+        if self.state == 1:
+
+            goal = copy.deepcopy(self.goal)
+            goal.header.stamp = rospy.Time.now()
+            goal_in_baselink = self.tf_buffer.transform(goal, self.name + "/base_footprint", rospy.Duration(1))
+
+            x = goal_in_baselink.pose.position.x
+            y = goal_in_baselink.pose.position.y
+
+            dist = math.sqrt(x**2 + y**2)
+
+            close_player = False
+
+            for player in players:
+                if player["pixels"] is None and player["team"] == self.prey_team:
+                    close_player = True
+
+            if close_player:
+                redefine = True
+
+            if not close_player and dist <= 2:
+                redefine = True
+
+        if self.state == 2:
+            stop_running = True
+            for player in players:
+                if player["pixels"] is None and player["team"] == self.hunter_team:
+                    stop_running = False
+
+            if stop_running:
+                self.state = 0
+                redefine = True
 
         return redefine
 
@@ -207,7 +273,7 @@ class Driver:
             poseStamped.header.stamp = rospy.Time.now()
 
             x_pix = target_2d[0]
-            k = math.pi / (10 * self.width)
+            k = math.pi / (5 * self.width)
 
             error = (self.width / 2) - x_pix
 
