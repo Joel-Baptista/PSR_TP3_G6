@@ -108,7 +108,7 @@
         <arg name="yaw" value="$(arg yaw)"/>
     </include>
 
-        <!--    GREEN ROBOT 2-->
+    <!--    GREEN ROBOT 2-->
     <include file="$(find p_g06_bringup)/launch/bringup.launch">
         <arg name="player_name" value="green2"/>
         <arg name="player_color" value="Green"/>
@@ -121,7 +121,7 @@
         <arg name="yaw" value="$(arg yaw)"/>
     </include>
 
-        <!--    GREEN ROBOT-->
+    <!--    GREEN ROBOT-->
     <include file="$(find p_g06_bringup)/launch/bringup.launch">
         <arg name="player_name" value="green3"/>
         <arg name="player_color" value="Green"/>
@@ -133,5 +133,10 @@
         <arg name="pitch" value="$(arg pitch)"/>
         <arg name="yaw" value="$(arg yaw)"/>
     </include>
+
+    <!--    ***********************************************************************-->
+    <!--    set players names on gazebo-->
+
+    <node name="set_player_names" pkg="th_referee" type="set_player_names"/>
 
 </launch>
