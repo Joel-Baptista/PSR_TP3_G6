@@ -26,20 +26,18 @@
     <!--        <param name="robot_description" command="$(find xacro)/xacro &#45;&#45;inorder $(find p_moliveira_description_tp)/urdf/p_moliveira.urdf.xacro" />-->
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
 
-    <!-- Include do spawn.launch-->
-    <include file="$(find p_g06_multi_robot)/launch/multi_robot.launch">
-      <arg name="player_name" value="$(arg player_name)"/>
-      <arg name="x_pos" value="$(arg x_pos)"/>
-      <arg name="y_pos" value="$(arg y_pos)"/>
-      <arg name="z_pos" value="$(arg z_pos)"/>
-    </include>
-
-    <include file="$(find p_g06_bringup)/launch/th_arenas.launch">
-
-    </include>
+    <include file="$(find p_g06_bringup)/launch/spawn.launch">
+            <arg name="player_name" value="$(arg player_name)"/>
+            <arg name="x_pos" value="$(arg x_pos)"/>
+            <arg name="y_pos" value="$(arg y_pos)"/>
+            <arg name="z_pos" value="$(arg z_pos)"/>
+        </include>
+    <!--    Include rviz visualization-->
   </group>
 
-
+  <group if="$(arg visualize)">
+         <include file="$(find p_g06_bringup)/launch/visualize.launch"/>
+  </group>
 
 
     <!-- Include do teleop launch-->
