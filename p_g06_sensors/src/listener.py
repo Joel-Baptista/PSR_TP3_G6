@@ -15,15 +15,20 @@ import sys
 
 def callbackMsgReceived(msg):
     for i in msg.idx:
-        x = np.around(msg.locations[i].pose.position.x, 3)
-        y = np.around(msg.locations[i].pose.position.y, 3)
 
-        xpix = msg.Xpixel[i]
-        ypix = msg.Ypixel[i]
+        if msg.pose3D[i]:
+            x = np.around(msg.locations[i].pose.position.x, 3)
+            y = np.around(msg.locations[i].pose.position.y, 3)
 
-        frame = msg.locations[i].header.frame_id
-        rospy.loginfo("Player found number " + str(i + 1) + " is in team " + msg.teams[i] + " and in position (" + str(x) + "," + str(y) + ")"
-                      + " in the frame " + frame + " and pixels at (" + str(xpix) + "," + str(ypix) + ").")
+            frame = msg.locations[i].header.frame_id
+            rospy.loginfo("Player found number " + str(i + 1) + " is in team " + msg.teams[i] + " and in position (" + str(x) + "," + str(y) + ")"
+                          + " in the frame " + frame + ".")
+        else:
+
+            xpix = msg.Xpixel[i]
+            ypix = msg.Ypixel[i]
+            rospy.loginfo("Player found number " + str(i + 1) + " is in team " + msg.teams[i] + " and in pixel (" + str(xpix) + "," + str(ypix) + ").")
+
 
 def main():
     # ---------------------------------------------------
