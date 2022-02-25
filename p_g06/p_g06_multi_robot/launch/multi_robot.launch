@@ -94,7 +94,6 @@
 
     <!--***********************************************************************-->
 
-
     <!--    GREEN ROBOT 1-->
     <include file="$(find p_g06_bringup)/launch/bringup.launch">
         <arg name="player_name" value="green1"/>
