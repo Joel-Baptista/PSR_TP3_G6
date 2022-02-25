@@ -1,13 +1,11 @@
 This package contains a launch file that set a different level of intelligence for each robot, this means, each robot will run a different script so that we can compare the results.
 
 Current :
-Blue1 -> oriented_goal_cmd_vel
-Blue2 -> camera_and_lidar
-Blue3 -> camera_and_lidar
+Blue Team -> camera_and_lidar.py
 
-Red team -> camera_and_lidar
+Red team -> oriented_goal_cmd_vel.py
 
-Green team -> camera_and_lidar
+Green team -> camera_and_lidar.py
 
 **Use 4 different terminals:**
 

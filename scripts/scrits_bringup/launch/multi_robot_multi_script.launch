@@ -1,19 +1,12 @@
 <launch>
 
     <!--BLUE ROBOT-->
-    <!--    <node name="Blue1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">-->
-    <node name="Blue1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
-
-        <param name="robot_name" value="blue1"/>
-        <param name="robot_to_catch_1" value="red1"/>
-        <param name="robot_to_catch_2" value="red2"/>
-        <param name="robot_to_catch_3" value="red3"/>
-        <param name="robot_to_escape_1" value="green1"/>
-        <param name="robot_to_escape_2" value="green2"/>
-        <param name="robot_to_escape_3" value="green3"/>
-
-        <remap from="/blue1/cmd_vel" to="/blue1/cmd_vel"/>
-
+    <!--    <node pkg="p_g06_camera_and_lidar" name="blue_camera_and_lidar" type="camera_and_lidar.py" output="$(arg output_screen)">-->
+    <node pkg="p_g06_camera_and_lidar" name="blue1_camera_and_lidar" type="camera_and_lidar.py">
+        <param name="robot_color" value="Blue"/>
+        <remap from="blue1/cmd_vel" to="blue1/cmd_vel"/>
+        <remap from="blue1/camera/rgb/image_raw" to="blue1/camera/rgb/image_raw"/>
+        <remap from="blue1/scan" to="blue1/scan"/>
     </node>
 
     <!--    <node pkg="p_g06_camera_and_lidar" name="blue_camera_and_lidar" type="camera_and_lidar.py" output="$(arg output_screen)">-->
@@ -62,28 +55,64 @@
     <!--    *************************************************************-->
 
     <!--RED ROBOT-->
-    <!--    <node pkg="p_g06_camera_and_lidar" name="red_camera_and_lidar" type="camera_and_lidar.py" output="$(arg output_screen)">-->
-    <node pkg="p_g06_camera_and_lidar" name="red1_camera_and_lidar" type="camera_and_lidar.py">
+    <node name="Red1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">
+        <param name="robot_name" value="red1"/>
+        <param name="robot_teammate_2" value="red2"/>
+        <param name="robot_teammate_3" value="red3"/>
+
         <param name="robot_color" value="Red"/>
-        <remap from="blue1/cmd_vel" to="red1/cmd_vel"/>
-        <remap from="blue1/camera/rgb/image_raw" to="red1/camera/rgb/image_raw"/>
-        <remap from="blue1/scan" to="red1/scan"/>
+
+        <param name="robot_to_catch_1" value="green1"/>
+        <param name="robot_to_catch_2" value="green2"/>
+        <param name="robot_to_catch_3" value="green3"/>
+
+        <param name="robot_to_escape_1" value="blue1"/>
+        <param name="robot_to_escape_2" value="blue2"/>
+        <param name="robot_to_escape_3" value="blue3"/>
+
+        <remap from="/blue1/cmd_vel" to="/red1/cmd_vel"/>
+        <remap from="/blue1/scan" to="/red1/scan"/>
+        <remap from="/blue1/camera/rgb/image_raw" to="/red1/camera/rgb/image_raw"/>
     </node>
 
-    <!--    <node pkg="p_g06_camera_and_lidar" name="red_camera_and_lidar" type="camera_and_lidar.py" output="$(arg output_screen)">-->
-    <node pkg="p_g06_camera_and_lidar" name="red2_camera_and_lidar" type="camera_and_lidar.py">
+    <node name="Red2_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">
+        <param name="robot_name" value="red2"/>
+        <param name="robot_teammate_2" value="red1"/>
+        <param name="robot_teammate_3" value="red3"/>
+
         <param name="robot_color" value="Red"/>
-        <remap from="blue1/cmd_vel" to="red2/cmd_vel"/>
-        <remap from="blue1/camera/rgb/image_raw" to="red2/camera/rgb/image_raw"/>
-        <remap from="blue1/scan" to="red2/scan"/>
+
+        <param name="robot_to_catch_1" value="green1"/>
+        <param name="robot_to_catch_2" value="green2"/>
+        <param name="robot_to_catch_3" value="green3"/>
+
+        <param name="robot_to_escape_1" value="blue1"/>
+        <param name="robot_to_escape_2" value="blue2"/>
+        <param name="robot_to_escape_3" value="blue3"/>
+
+        <remap from="/blue1/cmd_vel" to="/red2/cmd_vel"/>
+        <remap from="/blue1/scan" to="/red2/scan"/>
+        <remap from="/blue1/camera/rgb/image_raw" to="/red2/camera/rgb/image_raw"/>
     </node>
 
-    <!--    <node pkg="p_g06_camera_and_lidar" name="red_camera_and_lidar" type="camera_and_lidar.py" output="$(arg output_screen)">-->
-    <node pkg="p_g06_camera_and_lidar" name="red3_camera_and_lidar" type="camera_and_lidar.py">
+    <node name="Red3_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">
+        <param name="robot_name" value="red3"/>
+        <param name="robot_teammate_2" value="red1"/>
+        <param name="robot_teammate_3" value="red2"/>
+
         <param name="robot_color" value="Red"/>
-        <remap from="blue1/cmd_vel" to="red3/cmd_vel"/>
-        <remap from="blue1/camera/rgb/image_raw" to="red3/camera/rgb/image_raw"/>
-        <remap from="blue1/scan" to="red3/scan"/>
+
+        <param name="robot_to_catch_1" value="green1"/>
+        <param name="robot_to_catch_2" value="green2"/>
+        <param name="robot_to_catch_3" value="green3"/>
+
+        <param name="robot_to_escape_1" value="blue1"/>
+        <param name="robot_to_escape_2" value="blue2"/>
+        <param name="robot_to_escape_3" value="blue3"/>
+
+        <remap from="/blue1/cmd_vel" to="/red3/cmd_vel"/>
+        <remap from="/blue1/scan" to="/red3/scan"/>
+        <remap from="/blue1/camera/rgb/image_raw" to="/red3/camera/rgb/image_raw"/>
     </node>
 
 
