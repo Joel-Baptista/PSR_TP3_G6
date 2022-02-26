@@ -3,6 +3,7 @@ import argparse
 import math
 import time
 import cv2
+import rosparam
 from cv_bridge import CvBridge
 import numpy as np
 import colorama
@@ -55,10 +56,13 @@ class Camera:
         self.name = rospy.get_name()
 
         self.name = self.name.strip("/")
-        idx = self.name.find("_", 0, len(self.name))
+
+        idx = self.name.find("/", 0, len(self.name))
 
         self.name = self.name[0:idx]
         print("My player name is " + self.name)
+
+        self.camera_visualize = rosparam.get_param("/" + self.name + "/camera_visualize")
 
         topic_image = "/" + self.name + '/camera/rgb/image_raw'
         topic_laser = "/" + self.name + '/scan'
@@ -137,8 +141,6 @@ class Camera:
                 point.y = 0
                 point.z = 0
 
-                print("Far player")
-
                 position3D.append(False)
             else:
                 average_point = np.mean(object["points"], axis=0)
@@ -147,8 +149,6 @@ class Camera:
                 point.y = average_point[1]
                 point.z = average_point[2]
                 position3D.append(True)
-
-                print("Near player")
 
             quaternion = Quaternion(x=0, y=0, z=0, w=1)
 
@@ -168,7 +168,7 @@ class Camera:
         p_loc.Area = Area
         p_loc.pose3D = position3D
 
-        print("Sending Location...")
+        print("Player " + self.name + " sending Location...")
 
         self.publisher_location.publish(p_loc)
 
@@ -216,9 +216,12 @@ class Camera:
         cv_bgr = cv2.cvtColor(cv_img, cv2.COLOR_RGB2BGR)
         cv_hsv = cv2.cvtColor(cv_img, cv2.COLOR_RGB2HSV)
 
-        cv2.imshow(self.window_name, cv_bgr)
+        if self.camera_visualize:
+            cv2.imshow(self.window_name, cv_bgr)
+            self.img_gui = copy.deepcopy(cv_bgr)
+
         self.img = cv_hsv
-        self.img_gui = copy.deepcopy(cv_bgr)
+
         key = cv2.waitKey(1)
 
         self.object_detection()
@@ -310,7 +313,8 @@ class Camera:
         all_masks = cv2.bitwise_or(final_masks[0], final_masks[1])
         all_masks = cv2.bitwise_or(final_masks[2], all_masks)
 
-        cv2.add(self.img_gui, (-10, 60, -10, 0), dst=self.img_gui, mask=all_masks)
+        if self.camera_visualize:
+            cv2.add(self.img_gui, (-10, 60, -10, 0), dst=self.img_gui, mask=all_masks)
 
         return final_masks
 
@@ -382,7 +386,9 @@ class Camera:
                 for lidar_pixel in objects_lidar_pixels:
                     x = int(lidar_pixel[0])
                     y = int(lidar_pixel[1])
-                    cv2.circle(self.img_gui, (x, y), 2, (255, 0, 255), -1)
+
+                    if self.camera_visualize:
+                        cv2.circle(self.img_gui, (x, y), 2, (255, 0, 255), -1)
 
         for k, mask in enumerate(masks):
 
@@ -429,7 +435,9 @@ class Camera:
                               "area": cv2.contourArea(contour)}
                     self.Objects.append(object)
 
-        cv2.imshow("window", self.img_gui)
+        if self.camera_visualize:
+            cv2.imshow("window", self.img_gui)
+
         self.sendMarkersCallback(self.Objects)
         self.sendPlayerLocation(self.Objects)
 

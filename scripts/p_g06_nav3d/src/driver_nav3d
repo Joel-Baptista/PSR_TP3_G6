@@ -24,7 +24,7 @@ class Driver:
         self.name = rospy.get_name()
 
         self.name = self.name.strip("/")
-        idx = self.name.find("_", 0, len(self.name))
+        idx = self.name.find("/", 0, len(self.name))
 
         self.name = self.name[0:idx]
 
@@ -265,7 +265,6 @@ class Driver:
             self.state = 1
 
         elif dist_min >= 0:
-            print("Messed it up!!")
             print(target_3d)
             self.goal = prev_goal
             self.state = 0
