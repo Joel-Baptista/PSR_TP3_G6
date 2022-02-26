@@ -257,8 +257,8 @@ class Driver:
 
             angle = k * error
 
-            poseStamped.pose.position.x = 4 * math.cos(angle)
-            poseStamped.pose.position.y = 4 * math.sin(angle)
+            poseStamped.pose.position.x = 10 * math.cos(angle)
+            poseStamped.pose.position.y = 10 * math.sin(angle)
 
             self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
 

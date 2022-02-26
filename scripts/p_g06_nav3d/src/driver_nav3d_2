@@ -1,0 +1,332 @@
+#!/usr/bin/env python3
+import argparse
+import math
+import time
+import cv2
+from cv_bridge import CvBridge
+import numpy as np
+import colorama
+from operator import itemgetter
+import rospy
+import copy
+from sensor_msgs.msg import Image, LaserScan, CameraInfo
+from std_msgs.msg import Header, ColorRGBA, Float64
+import tf2_geometry_msgs
+import tf2_ros
+from visualization_msgs.msg import Marker, MarkerArray
+from geometry_msgs.msg import Twist, PoseStamped, Point, Pose, Vector3, Quaternion
+from p_g06_sensors.msg import PlayerLocation
+
+
+class Driver:
+    def __init__(self):
+
+        self.name = rospy.get_name()
+
+        self.name = self.name.strip("/")
+        idx = self.name.find("/", 0, len(self.name))
+
+        self.name = self.name[0:idx]
+
+        self.state = 0  # 0 - netrual, 1 - hunting, 2 - fleeing
+        red_players = rospy.get_param("/red_players")
+        blue_players = rospy.get_param("/blue_players")
+        green_players = rospy.get_param("/green_players")
+
+        if self.name in red_players:
+            self.my_team, self.prey_team, self.hunter_team = "Red", "Green", "Blue"
+            print(
+                "My name is " + self.name + ". I am team " + colorama.Fore.RED + self.my_team + colorama.Style.RESET_ALL + ".\nI am hunting "
+                + colorama.Fore.GREEN + str(
+                    green_players) + colorama.Style.RESET_ALL + "\nand fleeing from " + colorama.Fore.BLUE
+                + str(blue_players) + colorama.Style.RESET_ALL + ".")
+        elif self.name in green_players:
+            self.my_team, self.prey_team, self.hunter_team = "Green", "Blue", "Red"
+            print(
+                "My name is " + self.name + ". I am team " + colorama.Fore.GREEN + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
+                + colorama.Fore.GREEN + str(
+                    green_players) + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Fore.BLUE
+                + str(blue_players) + colorama.Style.RESET_ALL + ".")
+        elif self.name in blue_players:
+            self.my_team, self.prey_team, self.hunter_team = "Blue", "Red", "Green"
+            print(
+                "My name is " + self.name + ". I am team " + colorama.Fore.BLUE + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
+                + colorama.Fore.RED + str(
+                    red_players) + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Fore.GREEN +
+                str(green_players) + colorama.Style.RESET_ALL + ".")
+        else:
+            self.my_team, self.prey_team, self.hunter_team = "None", "All", "None"
+            print(
+                "My name is " + self.name + ". I am team " + colorama.Fore.YELLOW + self.my_team + colorama.Style.RESET_ALL + ". I am hunting "
+                + colorama.Back.RED + "EVERYONE" + colorama.Style.RESET_ALL + " and fleeing from " + colorama.Back.RED +
+                "NO ONE. HIDE FROM ME IF YOU CAN" + colorama.Style.RESET_ALL + ".")
+
+        self.players = []
+
+        self.goal = None
+
+        self.angle = 0
+        self.speed = 0
+
+        # self.target = {"id": 0, "pixels": (0, 0), "points": PoseStamped(), "use_3d": False, "team": "None"}
+
+        topic_location = "/" + self.name + '/player_location'
+        topic_cmd_vel = "/" + self.name + '/cmd_vel'
+        topic_camera = "/" + self.name + '/camera/rgb/camera_info'
+
+        print("I'm subscribing to " + topic_location)
+        print("I'm publishing to " + topic_cmd_vel)
+
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
+
+        self.subscriber_camera = rospy.Subscriber(topic_camera, CameraInfo,
+                                                  self.getCameraInfoCallback)  # Gets parameters from camera
+
+        self.subscriber_player_location = rospy.Subscriber(topic_location, PlayerLocation,
+                                                           self.getLocationCallback)  # Gets location from player_finder
+        self.publisher_cmd_vel = rospy.Publisher(topic_cmd_vel, Twist, queue_size=10)
+
+        self.timer = rospy.Timer(rospy.Duration(0.1), self.sendCommandCallback)
+
+    def need_new_goal(self, thresh_dist=1.5):
+        goal_copy = copy.deepcopy(self.goal)
+        goal_copy.header.stamp = rospy.Time.now()
+
+        goal_in_base_link = self.tf_buffer.transform(goal_copy, self.name + "/base_footprint", rospy.Duration(1))
+
+        x = goal_in_base_link.pose.position.x
+        y = goal_in_base_link.pose.position.y
+
+        dist = math.sqrt(x**2 + y**2)
+
+        if dist <= thresh_dist:
+            self.goal = None
+
+    def speed_correction(self, speed, angle):
+
+        speed_ajusted = speed * (1 - ((6 * abs(angle))/math.pi))
+
+        # speed_ajusted = speed
+
+        speed_ajusted = max(0, speed_ajusted)
+
+        speed_ajusted = math.floor(10*speed_ajusted)/10
+
+        angle_ajusted = min(math.pi/3, angle)
+        angle_ajusted = max(-math.pi/3, angle_ajusted)
+
+        angle_ajusted = math.floor(100*angle_ajusted)/100
+
+        return speed_ajusted, angle_ajusted
+
+    def sendCommandCallback(self, event):
+
+        twist = Twist()
+
+        if not (self.goal is None):
+            self.drive_straight()
+
+        if self.state == 0:
+            self.speed = 0
+            self.angle = 0
+
+        twist.linear.x, twist.angular.z = self.speed_correction(self.speed, self.angle)
+
+        print("linear: " + str(twist.linear.x) + "; angular: " + str(twist.angular.z))
+
+        self.publisher_cmd_vel.publish(twist)
+
+    def getCameraInfoCallback(self, msg):  # Gets the camera parameters from the robot's camera
+        try:
+            self.height = msg.height
+            self.width = msg.width
+
+            self.camera_info_exist = True
+
+        except(tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+            self.camera_info_exist = False
+            rospy.logerr("Could not get camera parameters.")
+
+    def getLocationCallback(self, msg):
+
+        self.players = []
+
+        for i in msg.idx:
+
+            player_3d_loc = self.tf_buffer.transform(msg.locations[i], self.name + "/odom", rospy.Duration(1))
+
+            if msg.pose3D[i]:
+                player = {"points": player_3d_loc, "pixels": None, "team": msg.teams[i], "area": None}
+
+            else:
+                player = {"points": None, "pixels": (msg.Xpixel[i], msg.Ypixel[i]), "team": msg.teams[i],
+                          "area": msg.Area[i]}
+
+            self.players.append(player)
+
+
+        if not (self.goal is None):
+            self.need_new_goal()
+
+        self.choose_state(self.players)
+
+        if self.state == 1 and self.goal is None:
+            print("Need New Goal")
+            self.target_hunt(self.players)
+
+        if self.state == 2 and self.goal is None:
+            print("Need New Goal")
+            self.target_flee(self.players)
+
+
+    def drive_straight(self, max_speed = 1.3):
+        goal_copy = copy.deepcopy(self.goal)
+        goal_copy.header.stamp = rospy.Time.now()
+
+        goal_in_base_link = self.tf_buffer.transform(goal_copy, self.name + "/base_footprint", rospy.Duration(1))
+
+        x = goal_in_base_link.pose.position.x
+        y = goal_in_base_link.pose.position.y
+
+        # print("Going to " + str((x, y)))
+
+        self.angle = math.atan2(y, x)
+
+        if abs(self.angle) > math.pi - 0.8:
+            drive_back = -1
+        else:
+            drive_back = 1
+
+        self.speed = max_speed
+
+        # self.speed = drive_back * self.speed
+
+
+    def choose_state(self, players):
+
+        state_prev = self.state
+
+        near_prey = False
+        far_prey = False
+        near_hunter = False
+        far_hunter = False
+
+        state = 0
+
+        for player in players:
+            if player["team"] == self.prey_team and player["pixels"] is None:
+                near_prey = True
+
+            if player["team"] == self.prey_team and player["points"] is None:
+                far_prey = True
+
+            if player["team"] == self.hunter_team and player["pixels"] is None:
+                near_hunter = True
+
+            if player["team"] == self.hunter_team and player["points"] is None:
+                far_hunter = True
+
+        if (near_prey or far_prey) and not near_hunter:
+            state = 1
+
+        if near_hunter:
+            state = 2
+
+        if not (near_prey or far_prey) and (near_hunter or far_hunter):
+            state = 2
+
+        if state_prev == 2 and not (self.goal is None):
+            self.state = state_prev
+        else:
+            self.state = state
+
+    def target_neutral(self):
+        poseStamped = PoseStamped()
+        poseStamped.header.frame_id = self.name + "/base_footprint"
+        poseStamped.header.stamp = rospy.Time.now()
+
+        poseStamped.pose.position.x = 2
+        poseStamped.pose.position.y = 0
+
+        self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
+
+
+    def target_flee(self, players):
+        poseStamped = PoseStamped()
+        poseStamped.header.frame_id = self.name + "/base_footprint"
+        poseStamped.header.stamp = rospy.Time.now()
+
+        poseStamped.pose.position.x = -1.7
+        poseStamped.pose.position.y = 0
+
+        self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
+
+    def target_hunt(self, players):
+        near_prey = False
+        target = None
+        dist_min = 1000
+        area_max = 0
+
+        for player in players:
+            if player["team"] == self.prey_team:
+                if player["pixels"] is None:
+
+                    near_prey = True
+
+                    pose = player["points"]
+                    pose_in_baselink = self.tf_buffer.transform(pose, self.name + "/base_footprint", rospy.Duration(1))
+
+                    x = pose_in_baselink.pose.position.x
+                    y = pose_in_baselink.pose.position.y
+
+                    dist = math.sqrt(x**2 + y**2)
+
+                    if dist < dist_min:
+                        dist_min = dist
+                        target = pose
+
+                if player["points"] is None and not near_prey:
+
+
+                    if player["area"] > area_max:
+                        area_max = player["area"]
+                        poseStamped = PoseStamped()
+                        poseStamped.header.frame_id = self.name + "/base_footprint"
+                        poseStamped.header.stamp = rospy.Time.now()
+
+                        x_pix = player["pixels"][0]
+                        k = 0.3 * math.pi / self.width
+
+                        error = (self.width / 2) - x_pix
+
+                        angle = k * error
+
+                        poseStamped.pose.position.x = 4 * math.cos(angle)
+                        poseStamped.pose.position.y = 4 * math.sin(angle)
+
+                        target = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
+
+        self.goal = target
+
+
+
+
+
+
+
+
+def main():
+    # ---------------------------------------------------
+    # INITIALIZATION
+    # ---------------------------------------------------
+
+    rospy.init_node('Driver', anonymous=False)
+
+    driver = Driver()
+
+    rospy.spin()
+
+
+if __name__ == '__main__':
+    main()

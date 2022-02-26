@@ -1,17 +1,17 @@
 <launch>
 
-<!--    <include file="$(find p_g06_bringup)/launch/player_finder.launch">-->
-<!--        <arg name="player_name" value="blue1"/>-->
-<!--        <arg name="visualize" value="false"/>-->
-<!--    </include>-->
-<!--    <include file="$(find p_g06_bringup)/launch/player_finder.launch">-->
-<!--        <arg name="player_name" value="blue2"/>-->
-<!--        <arg name="visualize" value="false"/>-->
-<!--    </include>-->
-<!--    <include file="$(find p_g06_bringup)/launch/player_finder.launch">-->
-<!--        <arg name="player_name" value="blue3"/>-->
-<!--        <arg name="visualize" value="false"/>-->
-<!--    </include>-->
+    <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+        <arg name="player_name" value="blue1"/>
+        <arg name="visualize" value="false"/>
+    </include>
+    <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+        <arg name="player_name" value="blue2"/>
+        <arg name="visualize" value="false"/>
+    </include>
+    <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+        <arg name="player_name" value="blue3"/>
+        <arg name="visualize" value="false"/>
+    </include>
     <include file="$(find p_g06_bringup)/launch/player_finder.launch">
         <arg name="player_name" value="red1"/>
         <arg name="visualize" value="true"/>
@@ -24,16 +24,16 @@
         <arg name="player_name" value="red3"/>
         <arg name="visualize" value="false"/>
     </include>
-<!--    <include file="$(find p_g06_bringup)/launch/player_finder.launch">-->
-<!--        <arg name="player_name" value="green1"/>-->
-<!--        <arg name="visualize" value="false"/>-->
-<!--    </include>-->
-<!--    <include file="$(find p_g06_bringup)/launch/player_finder.launch">-->
-<!--        <arg name="player_name" value="green2"/>-->
-<!--        <arg name="visualize" value="false"/>-->
-<!--    </include>-->
-<!--    <include file="$(find p_g06_bringup)/launch/player_finder.launch">-->
-<!--        <arg name="player_name" value="green3"/>-->
-<!--        <arg name="visualize" value="false"/>-->
-<!--    </include>-->
+    <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+        <arg name="player_name" value="green1"/>
+        <arg name="visualize" value="false"/>
+    </include>
+    <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+        <arg name="player_name" value="green2"/>
+        <arg name="visualize" value="false"/>
+    </include>
+    <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+        <arg name="player_name" value="green3"/>
+        <arg name="visualize" value="false"/>
+    </include>
 </launch>

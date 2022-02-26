@@ -1,14 +1,14 @@
 <launch>
 
-<!--    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">-->
-<!--        <arg name="player_name" value="blue1"/>-->
-<!--    </include>-->
-<!--    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">-->
-<!--        <arg name="player_name" value="blue2"/>-->
-<!--    </include>-->
-<!--    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">-->
-<!--        <arg name="player_name" value="blue3"/>-->
-<!--    </include>-->
+    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">
+        <arg name="player_name" value="blue1"/>
+    </include>
+    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">
+        <arg name="player_name" value="blue2"/>
+    </include>
+    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">
+        <arg name="player_name" value="blue3"/>
+    </include>
     <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">
         <arg name="player_name" value="red1"/>
     </include>
@@ -18,13 +18,13 @@
     <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">
         <arg name="player_name" value="red3"/>
     </include>
-<!--    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">-->
-<!--        <arg name="player_name" value="green1"/>-->
-<!--    </include>-->
-<!--    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">-->
-<!--        <arg name="player_name" value="green2"/>-->
-<!--    </include>-->
-<!--    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">-->
-<!--        <arg name="player_name" value="green3"/>-->
-<!--    </include>-->
+    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">
+        <arg name="player_name" value="green1"/>
+    </include>
+    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">
+        <arg name="player_name" value="green2"/>
+    </include>
+    <include file="$(find p_g06_bringup)/launch/driver_nav3d.launch">
+        <arg name="player_name" value="green3"/>
+    </include>
 </launch>

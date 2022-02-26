@@ -300,13 +300,13 @@ class Camera:
 
         for mask in masks:
             mask_dilation = cv2.dilate(mask, self.kernel_lineY,
-                                       iterations=2)  # Dilates the mask in the Y-direction, because the robots are built by layers
+                                       iterations=4)  # Dilates the mask in the Y-direction, because the robots are built by layers
             mask_closing = cv2.morphologyEx(mask_dilation, cv2.MORPH_CLOSE,
                                             self.kernel_square)  # Closes the holes in the mask
             mask_dilation = cv2.dilate(mask_closing, self.kernel_lineX,
-                                       iterations=2)  # Dilates the mask in the X-direction to mantain the robot's shape
+                                       iterations=4)  # Dilates the mask in the X-direction to mantain the robot's shape
             mask_erode = cv2.erode(mask_dilation, self.kernel_square,
-                                   iterations=7)  # Because of all the previous dilations, an erode function is needed
+                                   iterations=16)  # Because of all the previous dilations, an erode function is needed
 
             final_masks.append(mask_erode)
 
