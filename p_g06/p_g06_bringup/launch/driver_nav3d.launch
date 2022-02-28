@@ -3,7 +3,7 @@
     <arg name="player_name" default="blue1"/>
 
     <group ns="$(arg player_name)">
-        <node name="nav3d" pkg="p_g06_nav3d" type="driver_nav3d_2" output="screen"/>
+        <node name="nav3d" pkg="p_g06_nav3d" type="driver_nav3d_3" output="screen"/>
     </group>
 
 
