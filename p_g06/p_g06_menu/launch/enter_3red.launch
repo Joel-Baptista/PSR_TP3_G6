@@ -1,5 +1,4 @@
 <launch>
-
     <arg name="player_name" default="blue1"/>
     <arg name="player_color" default="Blue"/>
 
@@ -13,47 +12,45 @@
     <!--    load params for game-->
     <rosparam command="load" file="$(find p_g06_bringup)/params/game.yaml"/>
 
-<!--BLUE ROBOT 1-->
+    <!--RED ROBOT 1-->
     <include file="$(find p_g06_bringup)/launch/bringup.launch">
-        <arg name="player_name" value="blue1"/>
-        <arg name="player_color" value="Blue"/>
+        <arg name="player_name" value="red1"/>
+        <arg name="player_color" value="Red"/>
         <!--        initial pose-->
-        <arg name="x_pos" value="-8"/>
-        <arg name="y_pos" value="0"/>
+        <arg name="x_pos" value="4"/>
+        <arg name="y_pos" value="4"/>
         <arg name="z_pos" value="$(arg z_pos)"/>
         <arg name="roll" value="$(arg roll)"/>
         <arg name="pitch" value="$(arg pitch)"/>
-        <arg name="yaw" value="0"/>
+        <arg name="yaw" value="$(arg yaw)"/>
     </include>
 
-    <!--BLUE ROBOT 2-->
+    <!--RED ROBOT 2-->
     <include file="$(find p_g06_bringup)/launch/bringup.launch">
-        <arg name="player_name" value="blue2"/>
-        <arg name="player_color" value="Blue"/>
+        <arg name="player_name" value="red2"/>
+        <arg name="player_color" value="Red"/>
         <!--        initial pose-->
-        <arg name="x_pos" value="-8"/>
-        <arg name="y_pos" value="1"/>
+        <arg name="x_pos" value="4"/>
+        <arg name="y_pos" value="5"/>
         <arg name="z_pos" value="$(arg z_pos)"/>
         <arg name="roll" value="$(arg roll)"/>
         <arg name="pitch" value="$(arg pitch)"/>
-        <arg name="yaw" value="0"/>
+        <arg name="yaw" value="$(arg yaw)"/>
     </include>
 
-    <!--BLUE ROBOT 3-->
+    <!--RED ROBOT 3-->
     <include file="$(find p_g06_bringup)/launch/bringup.launch">
-        <arg name="player_name" value="blue3"/>
-        <arg name="player_color" value="Blue"/>
+        <arg name="player_name" value="red3"/>
+        <arg name="player_color" value="Red"/>
         <!--        initial pose-->
-        <arg name="x_pos" value="-8"/>
-        <arg name="y_pos" value="2"/>
+        <arg name="x_pos" value="5"/>
+        <arg name="y_pos" value="5"/>
         <arg name="z_pos" value="$(arg z_pos)"/>
         <arg name="roll" value="$(arg roll)"/>
         <arg name="pitch" value="$(arg pitch)"/>
-        <arg name="yaw" value="0"/>
+        <arg name="yaw" value="$(arg yaw)"/>
     </include>
-
-    <!--    ***********************************************************************-->
-    <!--    set players names on gazebo-->
 
     <node name="set_player_names" pkg="th_referee" type="set_player_names"/>
+
 </launch>

@@ -1,4 +1,17 @@
 <launch>
+
+    <arg name="player_name" default="blue1"/>
+    <arg name="player_color" default="Blue"/>
+
+    <arg name="x_pos" default="-1"/>
+    <arg name="y_pos" default="4.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="3.1415"/>
+
+    <!--    load params for game-->
+    <rosparam command="load" file="$(find p_g06_bringup)/params/game.yaml"/>
 <!--BLUE ROBOT 1-->
     <include file="$(find p_g06_bringup)/launch/bringup.launch">
         <arg name="player_name" value="blue1"/>
@@ -24,4 +37,8 @@
         <arg name="pitch" value="$(arg pitch)"/>
         <arg name="yaw" value="0"/>
     </include>
+    <!--    ***********************************************************************-->
+    <!--    set players names on gazebo-->
+
+    <node name="set_player_names" pkg="th_referee" type="set_player_names"/>
 </launch>
