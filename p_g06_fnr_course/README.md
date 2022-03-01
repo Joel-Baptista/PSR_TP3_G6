@@ -8,7 +8,7 @@
 
 **Launch teleop**
 
-    LINK HERE---------------------------------------
+    roslaunch p_g06_bringup p_g06_teleop.launch 
 
 **Follow line:##################################################**
 
