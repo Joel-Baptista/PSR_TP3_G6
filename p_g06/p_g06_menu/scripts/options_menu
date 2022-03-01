@@ -12,7 +12,7 @@ def main():
     arena_selected = False
 
 
-    arena = input('Use arena 1,2 or 3?')
+    arena = input('Use arena 1,2 or 3?\n')
 
     while arena_selected == False:
 
@@ -21,13 +21,13 @@ def main():
             print('\nSelected arena' + arena)
         else:
             arena_selected = False
-            arena = input('Arena name not valid! Type 1,2 or 3.')
+            arena = input('Arena name not valid! Type 1,2 or 3.\n')
 
 
 
-    # os.system("roslaunch p_g06_menu game_start.launch arena:=1")
-    subprocess.call('roslaunch p_g06_menu game_start.launch arena:=1', shell=True)
-    subprocess.call('rosrun th_referee th_referee', shell=True)
+
+    # subprocess.call('roslaunch p_g06_menu game_start.launch arena:=1', shell=True)
+    # subprocess.call('rosrun th_referee th_referee', shell=True)
 
     # subprocess.call(['open', '-W', '-a', 'Terminal.app', '--args', 'roslaunch p_g06_menu game_start.launch arena:=1'])
 
