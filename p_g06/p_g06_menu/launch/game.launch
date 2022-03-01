@@ -1,0 +1,15 @@
+<launch>
+
+
+
+        <!--Bring up game-->
+<!--        <node name="bring_up_game" pkg="p_g06_menu" type="sub_menu_1" output="screen"/>-->
+
+        <!--Call referee-->
+        <node name="referee" pkg="p_g06_menu" type="sub_menu_2" output="screen"/>
+
+
+     <!--Include visualize.launch-->
+<!--    <include file="$(find p_g06_bringup)/launch/visualize.launch">-->
+<!--    </include>-->
+</launch>

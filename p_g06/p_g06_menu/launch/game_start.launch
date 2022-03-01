@@ -23,7 +23,7 @@
         </include>
 
         <!--Call referee-->
-        <node name="referee" pkg="th_referee" type="th_referee" output="screen"/>
+<!--        <node name="referee" pkg="th_referee" type="th_referee" output="screen"/>-->
 
 
      <!--Include visualize.launch-->

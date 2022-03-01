@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+
+import os
+import subprocess
+
+
+def main():
+    # ---------------------------------------------------
+    # INITIALIZATION
+    # ---------------------------------------------------
+
+    arena_selected = False
+
+
+    arena = input('Use arena 1,2 or 3?')
+
+    while arena_selected == False:
+
+        if arena == '1' or arena == '2' or arena == '3':
+            arena_selected = True
+            print('\nSelected arena' + arena)
+        else:
+            arena_selected = False
+            arena = input('Arena name not valid! Type 1,2 or 3.')
+
+
+
+    # os.system("roslaunch p_g06_menu game_start.launch arena:=1")
+    subprocess.call('roslaunch p_g06_menu game_start.launch arena:=1', shell=True)
+    subprocess.call('rosrun th_referee th_referee', shell=True)
+
+    # subprocess.call(['open', '-W', '-a', 'Terminal.app', '--args', 'roslaunch p_g06_menu game_start.launch arena:=1'])
+
+    # subprocess.call(['open', '-W', '-a', 'Terminal.app', '--args', 'rosrun th_referee th_referee'])
+
+    # subprocess.call(['gnome-terminal', '-x', 'rosrun th_referee th_referee'])
+
+if __name__ == '__main__':
+    main()
