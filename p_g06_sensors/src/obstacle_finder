@@ -15,8 +15,8 @@ from std_msgs.msg import Header, ColorRGBA, Float32MultiArray
 import tf2_geometry_msgs
 import tf2_ros
 from visualization_msgs.msg import Marker, MarkerArray
-from geometry_msgs.msg import Twist, PoseStamped, Point, PoseArray, Vector3, Quaternion
-from p_g06_sensors.msg import PlayerLocation
+from geometry_msgs.msg import Twist, PoseStamped, Point, PoseArray, Vector3, Quaternion, Pose
+from p_g06_sensors.msg import PlayerLocation, ObstacleLocation
 
 
 class Lidar:
@@ -43,12 +43,13 @@ class Lidar:
         print("My player name is " + self.name)
 
         topic_laser = "/" + self.name + '/scan'
-        topic_obstacles = "/" + self.name + '/obstacles'
-        topic_marker = "/" + self.name + '/markers'
+        topic_obstacles = "/" + self.name + '/obstacles_location'
+        topic_marker = "/" + self.name + '/markers_wall'
 
         print("I'm subscribing to " + topic_laser)
         print("I'm publishing to " + topic_obstacles)
         print("I'm publishing to " + topic_marker)
+        print("I'm publishing to " + topic_obstacles)
 
         # <==============================================================>
         # <================ COMMUNICATION INITIATION ====================>
@@ -63,9 +64,9 @@ class Lidar:
 
         # <-------------------PUBLISHERS INITIATION--------------------->
         # Publishes information to topics
-        self.publisher_location = rospy.Publisher(topic_obstacles, PoseArray,
+        self.publisher_location = rospy.Publisher(topic_obstacles, ObstacleLocation,
                                                   queue_size=10)  # Publishes markers to rviz to ensure that the data is correct
-        self.publisher_markers = rospy.Publisher(topic_marker, MarkerArray,
+        self.publisher_markers = rospy.Publisher(topic_marker, Marker,
                                                  queue_size=10)  # Publishes markers to rviz to ensure that the data is correct
         # self.timer = rospy.Timer(rospy.Duration(0.1), self.sendMarkersCallback)
         # self.timer_object_detection = rospy.Timer(rospy.Duration(0.1), self.object_detection())
@@ -81,18 +82,89 @@ class Lidar:
     # <---------------------------------------------------------------------------------------------------------->
     # <==========================================================================================================>
 
+    def sendObstaclesLocation(self, Obstacles):
+        point_closest = [0, 0, 0]
+        dist_min = 1000
+        dist_closest = 1000
+        for point in Obstacles:
+
+            x = point[0]
+            y = point[1]
+
+            dist = math.sqrt(x**2 + y**2)
+
+            if dist <= dist_min:
+                dist_min = dist
+                dist_closest = dist
+                point_closest = point
+
+        Pose_point_closest = PoseStamped()
+
+        Pose_point_closest.header = Header(stamp=rospy.Time.now(), frame_id=self.name + "/base_scan")
+        Pose_point_closest.pose = Pose(position=Point(x=point_closest[0], y=point_closest[1], z=point_closest[2]))
+        Pose_point_closest.pose.orientation.w = 1
+
+        Pose_point_closest_in_odom = self.tf_buffer.transform(Pose_point_closest, self.name + "/odom", rospy.Duration(1))
+
+        try:
+            trans = self.tf_buffer.lookup_transform(self.name + "/base_scan", self.name + "/odom", rospy.Time())
+
+            trans_x = trans.transform.translation.x
+            trans_y = trans.transform.translation.y
+            trans_z = trans.transform.translation.z
+
+        except(tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+            rospy.logerr("Transformation matrix could not be found")
+            trans_x, trans_y, trans_z = 0, 0, 0
+
+        linear_transform = np.array([[1, 0, 0, trans_x], [0, 1, 0, trans_y], [0, 0, 1, trans_z], [0, 0, 0, 1]])
+
+        Obstacles_transposed = np.transpose(Obstacles)
+
+        Obstacles_in_odom_transposed = np.dot(linear_transform, Obstacles_transposed)
+
+        Obstacles_in_odom = np.transpose(Obstacles_in_odom_transposed)
+
+        obstacles_points = PoseArray()
+        obstacles_points.header = Header(stamp=rospy.Time.now(), frame_id=self.name + "/odom")
+
+        for point in Obstacles_in_odom:
+
+            x = point[0]
+            y = point[1]
+            z = point[2]
+
+            pose = Pose(position=Point(x=x, y=y, z=z), orientation=Quaternion(x=0, y=0, z=0, w=1))
+
+            obstacles_points.poses.append(pose)
+
+        obstacle_location = ObstacleLocation()
+
+        obstacle_location.obstacles_points = obstacles_points
+        obstacle_location.closest_point = Pose_point_closest_in_odom
+        obstacle_location.closest_dist = dist_closest
+        obstacle_location.referencial = self.name + "/odom"
+
+        self.publisher_location.publish(obstacle_location)
+
     def sendMarkersCallback(self, Objects):
-        markers_array = MarkerArray()
         marker = Marker()
 
+        marker.header = Header(stamp=rospy.Time.now(), frame_id=self.name + "/base_scan")
+        marker.color = ColorRGBA(r=0, g=0, b=1, a=0.5)
+        marker.scale = Vector3(x=0.1, y=0.1, z=0.1)
+        marker.ns = "Spheres"
+        marker.type = 7
 
-        for object in Objects:
-            for point in object:
-                x = point[0]
-                y = point[1]
-                z = point[2]
+        for point in Objects:
 
+            x = point[0]
+            y = point[1]
+            z = point[2]
 
+            marker.points.append(Point(x=x, y=y, z=z))
+
+        self.publisher_markers.publish(marker)
 
     def getLaserCallback(self, laser):  # Gets Lidar 2D points from the robot's sensor
         self.LidarPoints = []
@@ -117,14 +189,16 @@ class Lidar:
                 self.LidarPoints.append(poseStamped)
 
         points_list = self.lidar_object_detection()
-        print(len(points_list))
+        # print(len(points_list))
         # print(points_list[0].shape[0])
 
-        self.obstacle_detection(points_list)
-        print(self.obstacle_points)
+        self.obstacle_detection(points_list, 5, 0.5)
+        # print(self.obstacle_points[0].shape[0])
         self.sendMarkersCallback(self.obstacle_points)
 
-    def obstacle_detection(self, points_list, thresh=10, ):
+        self.sendObstaclesLocation(self.obstacle_points)
+
+    def obstacle_detection(self, points_list, thresh=10, dist_min=1.0):
         self.obstacle_points = []
         obstacles_points = []
 
@@ -132,12 +206,20 @@ class Lidar:
 
         for points in points_list:
 
-            if points.shape[0] >= thresh:
+            x0 = points[0][0]
+            y0 = points[0][1]
+
+            x1 = points[-1][0]
+            y1 = points[-1][1]
+
+            dist = math.sqrt((x0 - x1)**2 + (y0 - y1)**2)
+            # print(dist)
+            if points.shape[0] >= thresh and dist >= dist_min:
                 obstacles_points.append(points)
                 points_len += points.shape[0]
 
         idx = 0
-        obstacle_points = np.zeros(points_len, 3)
+        obstacle_points = np.zeros((points_len, 4))
 
         for object in obstacles_points:
             for point in object:
@@ -145,7 +227,7 @@ class Lidar:
                 y = point[1]
                 z = point[2]
 
-                vector_lidarPoint = np.array([x, y, z])
+                vector_lidarPoint = np.array([x, y, z, 1])
 
                 obstacle_points[idx] = vector_lidarPoint
                 idx += 1
