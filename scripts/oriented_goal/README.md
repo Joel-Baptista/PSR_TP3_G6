@@ -33,3 +33,28 @@ publish on:
 **Launch the script for one robot (blue1):**
 
     roslaunch oriented_goal one_robot_cmd_vel.launch 
+
+**ORIENTED_GOAL**
+
+Video: https://youtu.be/RV6BOIRpye0 
+ 
+
+Launch arena: 
+
+    roslaunch p_g06_bringup th_arenas.launch arena:=3 
+
+Launch robots: 
+
+    roslaunch p_g06_multi_robot multi_robot.launch 
+
+Launch navigation 
+
+    roslaunch p_g06_navigation p_g06_navigation.launch 
+
+Launch script 
+
+    roslaunch oriented_goal one_robot.launch  
+
+Launch referee: 
+
+    rosrun th_referee th_referee 
