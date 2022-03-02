@@ -15,7 +15,7 @@ import tf2_geometry_msgs
 import tf2_ros
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Twist, PoseStamped, Point, Pose, Vector3, Quaternion
-from p_g06_sensors.msg import PlayerLocation
+from p_g06_sensors.msg import PlayerLocation, ObstacleLocation
 
 
 class Driver:
@@ -64,17 +64,22 @@ class Driver:
         self.players = []
 
         self.goal = None
+        self.closest_obstacle_point = None
+        self.closest_obstacle_dist = 10000
+        self.obstacle_points = None
+        self.obstacle_ref = None
 
         self.angle = 0
         self.speed = 0
 
         # self.target = {"id": 0, "pixels": (0, 0), "points": PoseStamped(), "use_3d": False, "team": "None"}
 
-        topic_location = "/" + self.name + '/player_location'
+        topic_player_location = "/" + self.name + '/player_location'
+        topic_obstacle_location = "/" + self.name + '/obstacles_location'
         topic_cmd_vel = "/" + self.name + '/cmd_vel'
         topic_camera = "/" + self.name + '/camera/rgb/camera_info'
 
-        print("I'm subscribing to " + topic_location)
+        print("I'm subscribing to " + topic_player_location)
         print("I'm publishing to " + topic_cmd_vel)
 
         self.tf_buffer = tf2_ros.Buffer()
@@ -83,42 +88,20 @@ class Driver:
         self.subscriber_camera = rospy.Subscriber(topic_camera, CameraInfo,
                                                   self.getCameraInfoCallback)  # Gets parameters from camera
 
-        self.subscriber_player_location = rospy.Subscriber(topic_location, PlayerLocation,
-                                                           self.getLocationCallback)  # Gets location from player_finder
+        self.subscriber_player_location = rospy.Subscriber(topic_player_location, PlayerLocation,
+                                                           self.getPlayerLocationCallback)  # Gets location from player_finder
+
+        self.subscriber_obstacle_location = rospy.Subscriber(topic_obstacle_location, ObstacleLocation,
+                                                           self.getObstacleLocationCallback)  # Gets location from player_finder
         self.publisher_cmd_vel = rospy.Publisher(topic_cmd_vel, Twist, queue_size=10)
 
         self.timer = rospy.Timer(rospy.Duration(0.1), self.sendCommandCallback)
 
-    def need_new_goal(self, thresh_dist=1.5):
-        goal_copy = copy.deepcopy(self.goal)
-        goal_copy.header.stamp = rospy.Time.now()
-
-        goal_in_base_link = self.tf_buffer.transform(goal_copy, self.name + "/base_footprint", rospy.Duration(1))
-
-        x = goal_in_base_link.pose.position.x
-        y = goal_in_base_link.pose.position.y
-
-        dist = math.sqrt(x**2 + y**2)
-
-        if dist <= thresh_dist:
-            self.goal = None
-
-    def speed_correction(self, speed, angle):
-
-        speed_ajusted = speed * (1 - ((6 * abs(angle))/math.pi))
-
-        # speed_ajusted = speed
-
-        speed_ajusted = max(0, speed_ajusted)
-
-        speed_ajusted = math.floor(10*speed_ajusted)/10
-
-        angle_ajusted = min(math.pi/3, angle)
-        angle_ajusted = max(-math.pi/3, angle_ajusted)
-
-        angle_ajusted = math.floor(100*angle_ajusted)/100
-
-        return speed_ajusted, angle_ajusted
+    # <==========================================================================================================>
+    # <---------------------------------------------------------------------------------------------------------->
+    # <------------------------------------COMMUNICATION FUNCTIONS----------------------------------------------->
+    # <---------------------------------------------------------------------------------------------------------->
+    # <==========================================================================================================>
 
     def sendCommandCallback(self, event):
 
@@ -127,13 +110,9 @@ class Driver:
         if not (self.goal is None):
             self.drive_straight()
 
-        if self.state == 0:
-            self.speed = 0
-            self.angle = 0
-
         twist.linear.x, twist.angular.z = self.speed_correction(self.speed, self.angle)
 
-        print("linear: " + str(twist.linear.x) + "; angular: " + str(twist.angular.z))
+        # print("linear: " + str(twist.linear.x) + "; angular: " + str(twist.angular.z))
 
         self.publisher_cmd_vel.publish(twist)
 
@@ -148,7 +127,7 @@ class Driver:
             self.camera_info_exist = False
             rospy.logerr("Could not get camera parameters.")
 
-    def getLocationCallback(self, msg):
+    def getPlayerLocationCallback(self, msg):
 
         self.players = []
 
@@ -165,11 +144,15 @@ class Driver:
 
             self.players.append(player)
 
-
         if not (self.goal is None):
             self.need_new_goal()
 
         self.choose_state(self.players)
+        print(self.state)
+
+        if self.state == 0 and self.goal is None:
+            print("Need New Goal")
+            self.target_neutral()
 
         if self.state == 1 and self.goal is None:
             print("Need New Goal")
@@ -179,29 +162,22 @@ class Driver:
             print("Need New Goal")
             self.target_flee(self.players)
 
+        if self.state == 3 and self.goal is None:
+            print("Need New Goal")
+            self.target_avoid_wall(self.players)
 
-    def drive_straight(self, max_speed = 1.3):
-        goal_copy = copy.deepcopy(self.goal)
-        goal_copy.header.stamp = rospy.Time.now()
+    def getObstacleLocationCallback(self, msg):
 
-        goal_in_base_link = self.tf_buffer.transform(goal_copy, self.name + "/base_footprint", rospy.Duration(1))
+        self.obstacle_points = msg.obstacles_points
+        self.closest_obstacle_point = msg.closest_point
+        self.closest_obstacle_dist = msg.closest_dist
+        self.obstacle_ref = msg.referencial
 
-        x = goal_in_base_link.pose.position.x
-        y = goal_in_base_link.pose.position.y
-
-        # print("Going to " + str((x, y)))
-
-        self.angle = math.atan2(y, x)
-
-        if abs(self.angle) > math.pi - 0.8:
-            drive_back = -1
-        else:
-            drive_back = 1
-
-        self.speed = max_speed
-
-        # self.speed = drive_back * self.speed
-
+    # <==========================================================================================================>
+    # <---------------------------------------------------------------------------------------------------------->
+    # <--------------------------------------------STATE FUNCTIONS----------------------------------------------->
+    # <---------------------------------------------------------------------------------------------------------->
+    # <==========================================================================================================>
 
     def choose_state(self, players):
 
@@ -211,8 +187,11 @@ class Driver:
         far_prey = False
         near_hunter = False
         far_hunter = False
-
+        near_wall = False
         state = 0
+
+        if self.closest_obstacle_dist <= 1:
+            near_wall = True
 
         for player in players:
             if player["team"] == self.prey_team and player["pixels"] is None:
@@ -227,19 +206,70 @@ class Driver:
             if player["team"] == self.hunter_team and player["points"] is None:
                 far_hunter = True
 
-        if (near_prey or far_prey) and not near_hunter:
+        if (near_prey or far_prey) and not near_hunter: # if there are preys but not near hunters
             state = 1
 
-        if near_hunter:
+        if near_hunter: # there are near hunters
             state = 2
 
-        if not (near_prey or far_prey) and (near_hunter or far_hunter):
+        if not (near_prey or far_prey) and (near_hunter or far_hunter): # There are only hunters
             state = 2
+
+        if not near_prey and near_wall:
+            state = 3
 
         if state_prev == 2 and not (self.goal is None):
             self.state = state_prev
         else:
             self.state = state
+
+        if state_prev != self.state:
+            self.goal = None
+
+    def need_new_goal(self, thresh_dist=1.5):
+        goal_copy = copy.deepcopy(self.goal)
+        goal_copy.header.stamp = rospy.Time.now()
+
+        goal_in_base_link = self.tf_buffer.transform(goal_copy, self.name + "/base_footprint", rospy.Duration(1))
+
+        x = goal_in_base_link.pose.position.x
+        y = goal_in_base_link.pose.position.y
+
+        dist = math.sqrt(x**2 + y**2)
+
+        if dist <= thresh_dist:
+            self.goal = None
+
+    # <==========================================================================================================>
+    # <---------------------------------------------------------------------------------------------------------->
+    # <-------------------------------------------TARGET FUNCTIONS----------------------------------------------->
+    # <---------------------------------------------------------------------------------------------------------->
+    # <==========================================================================================================>
+
+    def target_avoid_wall(self, players):
+
+        poseStamped = PoseStamped()
+        poseStamped.header.frame_id = self.name + "/base_footprint"
+        poseStamped.header.stamp = rospy.Time.now()
+
+        wall_closest = copy.deepcopy(self.closest_obstacle_point)
+
+        wall_closest_in_base_link = self.tf_buffer.transform(wall_closest, self.name + "/base_footprint",
+                                                             rospy.Duration(1))
+        x = wall_closest_in_base_link.pose.position.x
+        y = wall_closest_in_base_link.pose.position.y
+
+        angle = math.atan2(y, x)
+        # sign = angle/abs(angle)
+        # new_angle = angle + sign * 2 * math.pi/3
+
+        new_angle = math.pi + angle
+        print(angle)
+        print(new_angle)
+        poseStamped.pose.position.x = 2 * math.cos(new_angle)
+        poseStamped.pose.position.y = 2 * math.sin(new_angle)
+
+        self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
 
     def target_neutral(self):
         poseStamped = PoseStamped()
@@ -308,6 +338,58 @@ class Driver:
                         target = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
 
         self.goal = target
+
+    # <==========================================================================================================>
+    # <---------------------------------------------------------------------------------------------------------->
+    # <--------------------------------------------DRIVE FUNCTIONS----------------------------------------------->
+    # <---------------------------------------------------------------------------------------------------------->
+    # <==========================================================================================================>
+
+    def speed_correction(self, speed, angle):
+
+        speed_ajusted = speed * (1 - ((6 * abs(angle))/math.pi))
+
+        # speed_ajusted = speed
+
+        speed_ajusted = max(0, speed_ajusted)
+
+        speed_ajusted = math.floor(10*speed_ajusted)/10
+
+        angle_ajusted = min(math.pi/3, angle)
+        angle_ajusted = max(-math.pi/3, angle_ajusted)
+
+        angle_ajusted = math.floor(100*angle_ajusted)/100
+
+        return speed_ajusted, angle_ajusted
+
+
+
+    def drive_straight(self, max_speed = 1.3):
+        goal_copy = copy.deepcopy(self.goal)
+        goal_copy.header.stamp = rospy.Time.now()
+
+        goal_in_base_link = self.tf_buffer.transform(goal_copy, self.name + "/base_footprint", rospy.Duration(1))
+
+        x = goal_in_base_link.pose.position.x
+        y = goal_in_base_link.pose.position.y
+
+        # print("Going to " + str((x, y)))
+
+        self.angle = math.atan2(y, x)
+
+        if abs(self.angle) > math.pi - 0.8:
+            drive_back = -1
+        else:
+            drive_back = 1
+
+        self.speed = max_speed
+
+        # self.speed = drive_back * self.speed
+
+
+
+
+
 
 
 
