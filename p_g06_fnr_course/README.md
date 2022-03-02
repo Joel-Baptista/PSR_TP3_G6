@@ -1,3 +1,7 @@
+**Manual drive:##################################################**
+
+Video: https://www.youtube.com/watch?v=h_Sb5vHoZts
+
 **Launch world**
 
     roslaunch p_g06_bringup fnr_course.launch 
@@ -6,9 +10,13 @@
 
     roslaunch p_g06_bringup fnr_bringup.launch
 
+**Launch camera view**
+
+    rosrun image_view image_view image:=/blue1/camera/rgb/image_raw 
+
 **Launch teleop**
 
-    roslaunch p_g06_bringup p_g06_teleop.launch 
+    rosrun p_g06_drivers manual_drive.py
 
 **Follow line:##################################################**
 

@@ -8,14 +8,35 @@ if os.name == 'nt':
 else:
     import tty, termios
 
-BURGER_MAX_LIN_VEL = 5
-BURGER_MAX_ANG_VEL = 2.8
+BURGER_MAX_LIN_VEL = 1.2
+BURGER_MAX_ANG_VEL = 2.84
 
-WAFFLE_MAX_LIN_VEL = 5
-WAFFLE_MAX_ANG_VEL = 1.8
+WAFFLE_MAX_LIN_VEL = 1.2
+WAFFLE_MAX_ANG_VEL = 1.82
 
-LIN_VEL_STEP_SIZE = 0.1
+LIN_VEL_STEP_SIZE = 0.5
 ANG_VEL_STEP_SIZE = 0.2
+
+msg = """
+Control Your player!
+---------------------------
+Moving around:
+        w
+   a    s    d
+        x
+
+w/x : increase/decrease linear velocity (Max : ~ 1.2)
+a/d : increase/decrease angular velocity (Max : ~ 1.82)
+
+space key, s : force stop
+
+CTRL-C to quit
+"""
+
+e = """
+Communications Failed
+"""
+
 
 def getKey():
     if os.name == 'nt':
@@ -87,8 +108,8 @@ if __name__ == "__main__":
     if os.name != 'nt':
         settings = termios.tcgetattr(sys.stdin)
 
-    rospy.init_node('turtlebot3_teleop')
-    pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+    rospy.init_node('p_g06_teleop')
+    pub = rospy.Publisher('blue1/cmd_vel', Twist, queue_size=10)
 
     turtlebot3_model = rospy.get_param("model", "burger")
 
@@ -99,7 +120,7 @@ if __name__ == "__main__":
     control_angular_vel = 0.0
 
     try:
-
+        print(msg)
         while True:
             key = getKey()
             if key == 'w':
@@ -135,7 +156,6 @@ if __name__ == "__main__":
                     break
 
             if status == 20:
-
                 status = 0
 
             twist = Twist()
@@ -151,6 +171,9 @@ if __name__ == "__main__":
             twist.angular.z = control_angular_vel
 
             pub.publish(twist)
+
+    except:
+        print(e)
 
     finally:
         twist = Twist()
