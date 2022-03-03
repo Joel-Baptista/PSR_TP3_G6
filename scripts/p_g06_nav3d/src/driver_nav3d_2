@@ -112,7 +112,7 @@ class Driver:
 
         twist.linear.x, twist.angular.z = self.speed_correction(self.speed, self.angle)
 
-        # print("linear: " + str(twist.linear.x) + "; angular: " + str(twist.angular.z))
+        print("linear: " + str(twist.linear.x) + "; angular: " + str(twist.angular.z))
 
         self.publisher_cmd_vel.publish(twist)
 
@@ -218,7 +218,9 @@ class Driver:
         if not near_prey and near_wall:
             state = 3
 
-        if state_prev == 2 and not (self.goal is None):
+        if state_prev == 2 and state == 0 and not (self.goal is None): # Keep fleeing even if not seeing hunters
+            self.state = state_prev
+        elif state_prev == 1 and state == 0 and not (self.goal is None): # Keep hunting even if not seeing preys
             self.state = state_prev
         else:
             self.state = state
@@ -332,8 +334,8 @@ class Driver:
 
                         angle = k * error
 
-                        poseStamped.pose.position.x = 4 * math.cos(angle)
-                        poseStamped.pose.position.y = 4 * math.sin(angle)
+                        poseStamped.pose.position.x = 3 * math.cos(angle)
+                        poseStamped.pose.position.y = 3 * math.sin(angle)
 
                         target = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
 
@@ -347,24 +349,28 @@ class Driver:
 
     def speed_correction(self, speed, angle):
 
-        speed_ajusted = speed * (1 - ((6 * abs(angle))/math.pi))
+        angle_ajusted = min(math.pi / 4, angle)
+        angle_ajusted = max(-math.pi / 4, angle_ajusted)
 
-        # speed_ajusted = speed
+        angle_ajusted = math.floor(100 * angle_ajusted) / 100
 
-        speed_ajusted = max(0, speed_ajusted)
+        if speed != 0:
 
-        speed_ajusted = math.floor(10*speed_ajusted)/10
+            sign = speed / abs(speed)
 
-        angle_ajusted = min(math.pi/3, angle)
-        angle_ajusted = max(-math.pi/3, angle_ajusted)
+            speed_ajusted = abs(speed) * (1 - ((3 * abs(angle_ajusted))/math.pi))
 
-        angle_ajusted = math.floor(100*angle_ajusted)/100
+            # speed_ajusted = speed
+
+            speed_ajusted = sign * max(0, speed_ajusted)
+
+            speed_ajusted = math.floor(10*speed_ajusted)/10
+        else:
+            speed_ajusted = 0
 
         return speed_ajusted, angle_ajusted
 
-
-
-    def drive_straight(self, max_speed = 1.3):
+    def drive_straight(self, max_speed = 1.0):
         goal_copy = copy.deepcopy(self.goal)
         goal_copy.header.stamp = rospy.Time.now()
 
@@ -377,14 +383,17 @@ class Driver:
 
         self.angle = math.atan2(y, x)
 
+        if self.state == 0:
+            max_speed = 0.5
+
         if abs(self.angle) > math.pi - 0.8:
             drive_back = -1
         else:
             drive_back = 1
 
-        self.speed = max_speed
+        # self.speed = max_speed
 
-        # self.speed = drive_back * self.speed
+        self.speed = drive_back * max_speed
 
 
 

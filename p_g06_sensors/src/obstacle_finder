@@ -196,7 +196,9 @@ class Lidar:
         # print(self.obstacle_points[0].shape[0])
         self.sendMarkersCallback(self.obstacle_points)
 
-        self.sendObstaclesLocation(self.obstacle_points)
+        if len(self.obstacle_points) > 0:
+            print("Sending obstacle")
+            self.sendObstaclesLocation(self.obstacle_points)
 
     def obstacle_detection(self, points_list, thresh=10, dist_min=1.0):
         self.obstacle_points = []
@@ -204,33 +206,36 @@ class Lidar:
 
         points_len = 0
 
-        for points in points_list:
+        if len(points_list[0]) > 0:
+            for points in points_list:
 
-            x0 = points[0][0]
-            y0 = points[0][1]
+                x0 = points[0][0]
+                y0 = points[0][1]
 
-            x1 = points[-1][0]
-            y1 = points[-1][1]
+                x1 = points[-1][0]
+                y1 = points[-1][1]
 
-            dist = math.sqrt((x0 - x1)**2 + (y0 - y1)**2)
-            # print(dist)
-            if points.shape[0] >= thresh and dist >= dist_min:
-                obstacles_points.append(points)
-                points_len += points.shape[0]
+                dist = math.sqrt((x0 - x1)**2 + (y0 - y1)**2)
+                # print(dist)
+                if points.shape[0] >= thresh and dist >= dist_min:
+                    obstacles_points.append(points)
+                    points_len += points.shape[0]
 
-        idx = 0
-        obstacle_points = np.zeros((points_len, 4))
+            idx = 0
+            obstacle_points = np.zeros((points_len, 4))
 
-        for object in obstacles_points:
-            for point in object:
-                x = point[0]
-                y = point[1]
-                z = point[2]
+            for object in obstacles_points:
+                for point in object:
+                    x = point[0]
+                    y = point[1]
+                    z = point[2]
 
-                vector_lidarPoint = np.array([x, y, z, 1])
+                    vector_lidarPoint = np.array([x, y, z, 1])
 
-                obstacle_points[idx] = vector_lidarPoint
-                idx += 1
+                    obstacle_points[idx] = vector_lidarPoint
+                    idx += 1
+        else:
+            obstacle_points = []
 
         self.obstacle_points = obstacle_points
 
