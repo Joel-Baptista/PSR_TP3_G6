@@ -1,7 +1,14 @@
 # PSR_TP3_G6
-
+Teams:
 ![Screenshot](https://github.com/Joel-Baptista/PSR_TP3_G6/blob/main/Images/robots.png?raw=true)
 
+Gameplay images:
+![Screenshot](https://github.com/Joel-Baptista/PSR_TP3_G6/blob/main/Images/arena_3_1.png?raw=true)
+
+![Screenshot](https://github.com/Joel-Baptista/PSR_TP3_G6/blob/main/Images/arena_3_2.png?raw=true)
+
+Videos:
+[![Team Hunt - Blue1 gmapping arena 3](http://img.youtube.com/vi/f2aZTX3FzXc&t/0.jpg)](http://www.youtube.com/watch?v=f2aZTX3FzXc&t "Team Hunt - Blue1 gmapping arena 3")
 
 **Notas reunião alinhamento dia 30-1-2022**
 
