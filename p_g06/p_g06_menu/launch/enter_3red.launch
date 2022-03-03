@@ -51,6 +51,6 @@
         <arg name="yaw" value="$(arg yaw)"/>
     </include>
 
-    <node name="set_player_names" pkg="th_referee" type="set_player_names"/>
+
 
 </launch>
