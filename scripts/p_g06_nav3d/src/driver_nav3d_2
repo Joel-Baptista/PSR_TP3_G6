@@ -64,6 +64,7 @@ class Driver:
         self.players = []
 
         self.goal = None
+        self.goal_exit = None
         self.closest_obstacle_point = None
         self.closest_obstacle_dist = 10000
         self.obstacle_points = None
@@ -92,7 +93,7 @@ class Driver:
                                                            self.getPlayerLocationCallback)  # Gets location from player_finder
 
         self.subscriber_obstacle_location = rospy.Subscriber(topic_obstacle_location, ObstacleLocation,
-                                                           self.getObstacleLocationCallback)  # Gets location from player_finder
+                                                             self.getObstacleLocationCallback)  # Gets location from player_finder
         self.publisher_cmd_vel = rospy.Publisher(topic_cmd_vel, Twist, queue_size=10)
 
         self.timer = rospy.Timer(rospy.Duration(0.1), self.sendCommandCallback)
@@ -147,23 +148,30 @@ class Driver:
         if not (self.goal is None):
             self.need_new_goal()
 
+        if not (self.goal_exit is None):
+            self.need_new_goal_exit()
+            print("Need new exit")
+
+        if not(self.goal_exit is None):
+            self.goal_exit(self.obstacle_points)
+
         self.choose_state(self.players)
         print(self.state)
 
         if self.state == 0 and self.goal is None:
-            print("Need New Goal")
+            print("Need new goal")
             self.target_neutral()
 
         if self.state == 1 and self.goal is None:
-            print("Need New Goal")
+            print("Need new goal")
             self.target_hunt(self.players)
 
         if self.state == 2 and self.goal is None:
-            print("Need New Goal")
+            print("Need new goal")
             self.target_flee(self.players)
 
         if self.state == 3 and self.goal is None:
-            print("Need New Goal")
+            print("Need new goal")
             self.target_avoid_wall(self.players)
 
     def getObstacleLocationCallback(self, msg):
@@ -189,8 +197,9 @@ class Driver:
         far_hunter = False
         near_wall = False
         state = 0
+        max_area_norm = 0
 
-        if self.closest_obstacle_dist <= 1:
+        if self.closest_obstacle_dist <= 3:
             near_wall = True
 
         for player in players:
@@ -205,27 +214,34 @@ class Driver:
 
             if player["team"] == self.hunter_team and player["points"] is None:
                 far_hunter = True
+                area_norm = (100 * player["area"]) / (self.width * self.height)
 
-        if (near_prey or far_prey) and not near_hunter: # if there are preys but not near hunters
+                if area_norm > max_area_norm:
+                    max_area_norm = area_norm
+
+        if (near_prey or far_prey) and not near_hunter:  # if there are preys but not near hunters
             state = 1
 
-        if near_hunter: # there are near hunters
+        if near_hunter:  # there are near hunters
             state = 2
 
-        if not (near_prey or far_prey) and (near_hunter or far_hunter): # There are only hunters
+        if not (near_prey or far_prey) and far_hunter and max_area_norm >= 0.1:  # There are only hunters
             state = 2
 
-        if not near_prey and near_wall:
+        if not near_prey and not far_prey and near_wall:
             state = 3
 
-        if state_prev == 2 and state == 0 and not (self.goal is None): # Keep fleeing even if not seeing hunters
+        if state_prev == 2 and state == 0 and not (self.goal is None):  # Keep fleeing even if not seeing hunters
             self.state = state_prev
-        elif state_prev == 1 and state == 0 and not (self.goal is None): # Keep hunting even if not seeing preys
+        elif state_prev == 1 and state == 0 and not (self.goal is None):  # Keep hunting even if not seeing preys
             self.state = state_prev
         else:
             self.state = state
 
         if state_prev != self.state:
+            self.goal = None
+
+        if self.state == 1 and near_prey:
             self.goal = None
 
     def need_new_goal(self, thresh_dist=1.5):
@@ -237,10 +253,24 @@ class Driver:
         x = goal_in_base_link.pose.position.x
         y = goal_in_base_link.pose.position.y
 
-        dist = math.sqrt(x**2 + y**2)
+        dist = math.sqrt(x ** 2 + y ** 2)
 
         if dist <= thresh_dist:
             self.goal = None
+
+    def need_new_goal_exit(self, thresh_dist=0.5):
+        goal_copy = copy.deepcopy(self.goal_exit)
+        goal_copy.header.stamp = rospy.Time.now()
+
+        goal_in_base_link = self.tf_buffer.transform(goal_copy, self.name + "/base_footprint", rospy.Duration(1))
+
+        x = goal_in_base_link.pose.position.x
+        y = goal_in_base_link.pose.position.y
+
+        dist = math.sqrt(x ** 2 + y ** 2)
+
+        if dist <= thresh_dist:
+            self.goal_exit = None
 
     # <==========================================================================================================>
     # <---------------------------------------------------------------------------------------------------------->
@@ -261,17 +291,34 @@ class Driver:
         x = wall_closest_in_base_link.pose.position.x
         y = wall_closest_in_base_link.pose.position.y
 
-        angle = math.atan2(y, x)
-        # sign = angle/abs(angle)
-        # new_angle = angle + sign * 2 * math.pi/3
+        dist = math.sqrt(x**2 + y**2)
+        print(dist)
+        if dist <= 1:
+            angle = math.atan2(y, x)
+            # sign = angle/abs(angle)
+            # new_angle = angle + sign * 2 * math.pi/3
 
-        new_angle = math.pi + angle
-        print(angle)
-        print(new_angle)
-        poseStamped.pose.position.x = 2 * math.cos(new_angle)
-        poseStamped.pose.position.y = 2 * math.sin(new_angle)
+            if abs(angle) < math.pi/4:
+                k = 1
+            else:
+                k = 1/2
 
-        self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
+            if angle < 0:
+                new_angle = math.pi * k + angle
+            else:
+                new_angle = math.pi * k - angle
+
+            print(angle)
+            print(new_angle)
+            print(k)
+            poseStamped.pose.position.x = 2 * math.cos(new_angle)
+            poseStamped.pose.position.y = 2 * math.sin(new_angle)
+            self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
+        else:
+            print("goind to exit")
+            self.find_exit(self.obstacle_points)
+            self.goal = self.goal_exit
+
 
     def target_neutral(self):
         poseStamped = PoseStamped()
@@ -282,7 +329,6 @@ class Driver:
         poseStamped.pose.position.y = 0
 
         self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
-
 
     def target_flee(self, players):
         poseStamped = PoseStamped()
@@ -312,14 +358,13 @@ class Driver:
                     x = pose_in_baselink.pose.position.x
                     y = pose_in_baselink.pose.position.y
 
-                    dist = math.sqrt(x**2 + y**2)
+                    dist = math.sqrt(x ** 2 + y ** 2)
 
                     if dist < dist_min:
                         dist_min = dist
                         target = pose
 
                 if player["points"] is None and not near_prey:
-
 
                     if player["area"] > area_max:
                         area_max = player["area"]
@@ -341,6 +386,41 @@ class Driver:
 
         self.goal = target
 
+    def find_exit(self, obstacle_points):
+        goal_exit = None
+        y_mean = None
+        x_mean = None
+        x_prev = 0
+        y_prev = 0
+
+        for i, point in enumerate(obstacle_points.poses):
+
+            x = point.position.x
+            y = point.position.y
+
+            if i > 0:
+
+                dist = math.sqrt((x_prev - x) ** 2 + (y_prev - y) ** 2)
+
+                if dist >= 0.8:
+                    x_mean = (x + x_prev) / 2
+                    y_mean = (y + y_prev) / 2
+
+            x_prev = x
+            y_prev = y
+
+        if x_mean is not None:
+
+            poseStamped = PoseStamped()
+            poseStamped.header = Header(stamp=rospy.Time.now(), frame_id=self.name + "/odom")
+
+            poseStamped.pose.position.x = x_mean
+            poseStamped.pose.position.y = y_mean
+
+            goal_exit = poseStamped
+
+        self.goal = goal_exit
+
     # <==========================================================================================================>
     # <---------------------------------------------------------------------------------------------------------->
     # <--------------------------------------------DRIVE FUNCTIONS----------------------------------------------->
@@ -358,19 +438,19 @@ class Driver:
 
             sign = speed / abs(speed)
 
-            speed_ajusted = abs(speed) * (1 - ((3 * abs(angle_ajusted))/math.pi))
+            speed_ajusted = abs(speed) * (1 - ((3 * abs(angle_ajusted)) / math.pi))
 
             # speed_ajusted = speed
 
             speed_ajusted = sign * max(0, speed_ajusted)
 
-            speed_ajusted = math.floor(10*speed_ajusted)/10
+            speed_ajusted = math.floor(10 * speed_ajusted) / 10
         else:
             speed_ajusted = 0
 
         return speed_ajusted, angle_ajusted
 
-    def drive_straight(self, max_speed = 1.0):
+    def drive_straight(self, max_speed=1.0):
         goal_copy = copy.deepcopy(self.goal)
         goal_copy.header.stamp = rospy.Time.now()
 
@@ -381,10 +461,15 @@ class Driver:
 
         # print("Going to " + str((x, y)))
 
+        dist = math.sqrt(x ** 2 + y ** 2)
+
         self.angle = math.atan2(y, x)
 
         if self.state == 0:
             max_speed = 0.5
+
+        if self.state == 1 and dist <= 1.5:
+            max_speed = 0.6
 
         if abs(self.angle) > math.pi - 0.8:
             drive_back = -1
@@ -394,17 +479,6 @@ class Driver:
         # self.speed = max_speed
 
         self.speed = drive_back * max_speed
-
-
-
-
-
-
-
-
-
-
-
 
 
 def main():

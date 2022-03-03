@@ -1,4 +1,4 @@
 geometry_msgs/PoseArray obstacles_points
-geometry_msgs/PoseStamped closest_point
+geometry_msgs/PoseStamped
 float32 closest_dist
 string referencial
