@@ -1,5 +1,7 @@
 # PSR_TP3_G6
 
+https://github.com/Joel-Baptista/PSR_TP3_G6/blob/main/Images/robots.png
+
 
 **Notas reunião alinhamento dia 30-1-2022**
 
