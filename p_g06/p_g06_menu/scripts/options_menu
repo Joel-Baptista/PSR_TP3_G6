@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import os
 import subprocess
+import time
+
 
 
 def main():
@@ -10,7 +11,16 @@ def main():
     # ---------------------------------------------------
 
     arena_selected = False
+    mode_selected = False
+    custom_mode = False
+    red_defined = False
+    blue_defined = False
+    green_defined = False
+    custom_defined = False
 
+    # ---------------------------------------------------
+    # SELECT ARENA
+    # ---------------------------------------------------
 
     arena = input('Use arena 1,2 or 3?\n')
 
@@ -18,22 +28,132 @@ def main():
 
         if arena == '1' or arena == '2' or arena == '3':
             arena_selected = True
-            print('\nSelected arena' + arena)
+            print('\nSelected arena ' + arena)
         else:
             arena_selected = False
             arena = input('Arena name not valid! Type 1,2 or 3.\n')
 
+    # ---------------------------------------------------
+    # SELECT MODE
+    # ---------------------------------------------------
 
+    mode = input('\n\nUse which mode? [n, t, c]\n\n'
+                 'n - Normal Mode (3R x 3G x 3B)\n'
+                 't - Test Mode (3R x 1G x 1B)\n'
+                 'c - Custom mode (Choose number per team)\n\n')
 
+    while mode_selected == False:
 
-    # subprocess.call('roslaunch p_g06_menu game_start.launch arena:=1', shell=True)
-    # subprocess.call('rosrun th_referee th_referee', shell=True)
+        if mode == 'n':
+            mode_selected = True
+            custom_mode = False
+            print('\nSelected Normal Mode (3 x 3 x 3)\n')
+        elif mode == 't':
+            mode_selected = True
+            custom_mode = False
+            print('\nSelected Test Mode (3 x 1 x 1)\n')
+        elif mode == 'c' :
+            mode_selected = True
+            custom_mode = True
+            print('\nSelected custom mode. Define how many per team!\n')
+        else:
+            mode_selected = False
+            custom_mode = False
+            mode = input('\nMode does not exist! Type n,t or c.\n'
+                         'n - Normal Mode (3R x 3G x 3B)\n'
+                         't - Test Mode (3R x 1G x 1B)\n'
+                         'c - Custom mode (Choose number per team)\n')
 
-    # subprocess.call(['open', '-W', '-a', 'Terminal.app', '--args', 'roslaunch p_g06_menu game_start.launch arena:=1'])
+    # ---------------------------------------------------
+    # CUSTOM MODE PARAMETERS
+    # ---------------------------------------------------
 
-    # subprocess.call(['open', '-W', '-a', 'Terminal.app', '--args', 'rosrun th_referee th_referee'])
+    if custom_mode == True:
 
-    # subprocess.call(['gnome-terminal', '-x', 'rosrun th_referee th_referee'])
+        while custom_defined == False:
 
+            # ---------------------------------------------------
+            # CUSTOM MODE PARAMETERS: RED
+            # ---------------------------------------------------
+
+            red_number = input('How many Red players? 1,2 or 3?\n')
+
+            while red_defined == False:
+
+                if red_number == '1' or red_number == '2' or red_number == '3':
+                    red_defined = True
+                    print('\n\nNumber of players:\n'
+                          'Red: ' +  red_number + '\n')
+
+                else:
+                    red_defined= False
+                    red_number = input('Number not valid! Type 1,2 or 3.\n')
+
+            # ---------------------------------------------------
+            # CUSTOM MODE PARAMETERS: GREEN
+            # ---------------------------------------------------
+
+            green_number = input('How many Green players? 1,2 or 3?\n')
+
+            while green_defined == False:
+
+                if green_number == '1' or green_number == '2' or green_number == '3':
+                    green_defined = True
+                    print('\n\nNumber of players:\n'
+                          'Red: ' + red_number + '\n'
+                          'Green: ' + green_number + '\n')
+
+                else:
+                    green_defined = False
+                    green_number = input('Number not valid! Type 1,2 or 3.\n')
+
+            # ---------------------------------------------------
+            # CUSTOM MODE PARAMETERS: BLUE
+            # ---------------------------------------------------
+
+            blue_number = input('How many Blue players? 1,2 or 3?\n')
+
+            while blue_defined == False:
+
+                if blue_number == '1' or blue_number == '2' or blue_number == '3':
+                    blue_defined = True
+                    print('\n\nNumber of players:\n'
+                          'Red: ' + red_number + '\n'
+                          'Green: ' + green_number + '\n'
+                          'Blue: ' + blue_number + '\n')
+
+                else:
+                    blue_defined = False
+                    blue_number= input('Number not valid! Type 1,2 or 3.\n')
+
+            if red_defined == True and green_defined == True and blue_defined == True:
+                if red_number == blue_number == green_number == '3':
+                    mode = 'n'
+                elif red_number == '3' and (blue_number == green_number == '1'):
+                    mode = 't'
+                else:
+                    mode = 'c'
+                print('Custom Mode defined.\n')
+                custom_defined = True
+                continue
+
+    # ---------------------------------------------------
+    # LAUNCH GAME
+    # ---------------------------------------------------
+
+    start = input('Everything is set. Start game? [Y/n]\n')
+
+    if start == 'y' or start == 'Y':
+
+        if mode == 'n' or mode == 't':
+
+            string_to_launch = 'roslaunch p_g06_menu game_start_' + str(mode) + '.launch arena:=' + str(arena)
+
+        else:
+
+            string_to_launch = 'roslaunch p_g06_menu game_start_c.launch arena:=' + str(arena) + ' rnumber:=' + red_number + ' gnumber:=' + green_number + ' bnumber:=' + blue_number
+
+        subprocess.run(string_to_launch, shell=True)
+        # print(string_to_launch)
 if __name__ == '__main__':
     main()

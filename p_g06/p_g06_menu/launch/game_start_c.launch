@@ -1,0 +1,47 @@
+<launch>
+
+    <arg name="arena" default="1"/>
+    <arg name="rnumber" default="1"/>
+    <arg name="gnumber" default="1"/>
+    <arg name="bnumber" default="1"/>
+
+
+        <!--Include th_arenas.launch-->
+        <include file="$(find p_g06_bringup)/launch/th_arenas.launch">
+            <arg name="arena" value="$(arg arena)"/>
+        </include>
+
+        <!--Include robots-->
+
+        <!--RED-->
+        <include file="$(find p_g06_menu)/launch/enter_$(arg rnumber)red.launch">
+
+        </include>
+
+        <!--GREEN-->
+        <include file="$(find p_g06_menu)/launch/enter_$(arg gnumber)green.launch">
+
+        </include>
+        <!--BLUE-->
+        <include file="$(find p_g06_menu)/launch/enter_$(arg bnumber)blue.launch">
+
+        </include>
+
+        <!--Include multi_player_finder.launch-->
+        <include file="$(find p_g06_bringup)/launch/multi_player_finder.launch">
+
+        </include>
+
+        <!--Include multi_driver_nav3d.launch-->
+        <include file="$(find p_g06_bringup)/launch/multi_driver_nav3d.launch">
+
+        </include>
+
+        <!--Call referee-->
+<!--        <node name="referee" pkg="th_referee" type="th_referee" output="screen"/>-->
+
+
+     <!--Include visualize.launch-->
+<!--    <include file="$(find p_g06_bringup)/launch/visualize.launch">-->
+<!--    </include>-->
+</launch>
