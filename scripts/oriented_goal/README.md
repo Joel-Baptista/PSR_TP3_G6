@@ -1,4 +1,8 @@
-**ORIENTED_GOAL_CMD_VEL**
+**ORIENTED_GOAL_CMD_VEL ##################################################**
+
+Demonstration on one robot: https://www.youtube.com/watch?v=APcvfE-Za3w
+
+Multi Robots: https://www.youtube.com/watch?v=g1-Rnxu0qS8
 
 Funcionamento:
 1. Robô player obtem as posições de todos os robôs na arena - azuis, vermelhos e verdes
@@ -32,9 +36,13 @@ publish on:
 
 **Launch the script for one robot (blue1):**
 
-    roslaunch oriented_goal one_robot_cmd_vel.launch 
+    roslaunch oriented_goal one_robot_cmd_vel.launch
 
-**ORIENTED_GOAL**
+**Launch for all robots:**
+
+    roslaunch oriented_goal multi_robot_cmd_vel.launch
+
+**ORIENTED_GOAL ##################################################**
 
 Video: https://youtu.be/RV6BOIRpye0 
  

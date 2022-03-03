@@ -444,7 +444,7 @@ def main():
 
         # flag to detect teammate
         if distance_teammate_2 < thresh_dist_teammate or distance_teammate_3 < thresh_dist_teammate:
-            robot_teammate_near = True
+            robot_teammate_near = False
         else:
             robot_teammate_near = False
 
