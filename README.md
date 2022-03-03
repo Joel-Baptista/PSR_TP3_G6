@@ -15,6 +15,26 @@ Videos:
 
 Use the blue1 to map the arena 3 using gmapping node and camera_and_lidar.py script to move the robot, avoiding the obstacles.
 
+Launch arena 3:
+
+    roslaunch p_g06_bringup th_arenas.launch arena:=3
+
+Launch player blue1:  
+
+    roslaunch p_g06_bringup bringup.launch 
+
+Launch gmapping:
+
+    roslaunch p_g06_bringup gmapping.launch
+
+Launch rviz
+
+    roslaunch p_g06_bringup visualize.launch 
+
+Launch the script on one robot (blue1)  
+
+    roslaunch p_g06_camera_and_lidar one_robot_camera_lidar.launch 
+
 [![Team Hunt - Blue1 gmapping arena 3](https://img.youtube.com/vi/f2aZTX3FzXc/0.jpg)](http://www.youtube.com/watch?v=f2aZTX3FzXc&t "Team Hunt - Blue1 gmapping arena 3")
 
 ####################################################################
@@ -22,6 +42,19 @@ Use the blue1 to map the arena 3 using gmapping node and camera_and_lidar.py scr
 **Team Hunt - Camera and Lidar on 1 robot (demonstration)**
 
 Use camera_and_lidar.py script running on one robot for the purpose of demonstration.
+
+Launch arena 3:
+
+    roslaunch p_g06_bringup th_arenas.launch arena:=3
+
+Launch 3 robots of each color (blue, red and green): 
+
+    roslaunch p_g06_multi_robot multi_robot.launch
+
+Launch the script on one robot (blue1)  
+
+    roslaunch p_g06_camera_and_lidar one_robot_camera_lidar.launch  
+
 
 [![Team Hunt - Camera and Lidar on 1 robot (demonstration)](https://img.youtube.com/vi/IFBJfEv4O8o/0.jpg)](https://www.youtube.com/watch?v=IFBJfEv4O8o "Team Hunt - Camera and Lidar on 1 robot (demonstration")
 
@@ -31,6 +64,18 @@ Use camera_and_lidar.py script running on one robot for the purpose of demonstra
 
 Use camera_and_lidar.py running on all teams.
 
+Launch arena 3:
+
+    roslaunch p_g06_bringup th_arenas.launch arena:=3
+
+Launch 3 robots of each color (blue, red and green): 
+
+    roslaunch p_g06_multi_robot multi_robot.launch
+
+Launch the script for 3 robots of each team
+
+    roslaunch p_g06_camera_and_lidar multi_robot_camera_lidar.launch 
+
 [![Team Hunt Game - camera and lidar script for all robots](https://img.youtube.com/vi/xCXbXHZ2jH4/0.jpg)](https://www.youtube.com/watch?v=xCXbXHZ2jH4 "Team Hunt Game - camera and lidar script for all robots")
 
 ####################################################################
@@ -38,6 +83,18 @@ Use camera_and_lidar.py running on all teams.
 **Team Hunt - Oriented goal on one robot (demonstration)**
 
 Use oriented_goal_cmd_vel.py script running on one robot for the purpose of demonstration.
+
+Launch arena 3:
+
+    roslaunch p_g06_bringup th_arenas.launch arena:=1
+
+Launch 3 robots of each color (blue, red and green): 
+
+    roslaunch p_g06_multi_robot multi_robot.launch
+
+Launch the script for 1 robot:
+
+    roslaunch oriented_goal one_robot_cmd_vel.launch
 
 [![Team Hunt - Oriented goal on one robot (demonstration)](https://img.youtube.com/vi/APcvfE-Za3w/0.jpg)](https://www.youtube.com/watch?v=APcvfE-Za3w "Team Hunt - Oriented goal on one robot (demonstration)")
 
@@ -47,6 +104,18 @@ Use oriented_goal_cmd_vel.py script running on one robot for the purpose of demo
 
 Use oriented_goal_cmd_vel.py script running on all teams.
 
+Launch arena 3:
+
+    roslaunch p_g06_bringup th_arenas.launch arena:=1
+
+Launch 3 robots of each color (blue, red and green): 
+
+    roslaunch p_g06_multi_robot multi_robot.launch
+
+Launch for all robots: 
+
+    roslaunch oriented_goal multi_robot_cmd_vel.launch 
+
 [![Team Hunt - Oriented Goal Multi Robot](https://img.youtube.com/vi/g1-Rnxu0qS8/0.jpg)](https://www.youtube.com/watch?v=g1-Rnxu0qS8 "Team Hunt - Oriented Goal Multi Robot")
 
 ####################################################################
@@ -54,6 +123,22 @@ Use oriented_goal_cmd_vel.py script running on all teams.
 **Blue robot - Oriented Goal with AMCL, Map Server and Move Base**
 
 Use oriented_goal.py script with AMCL, Map Server and Move Base running on one robot. This idea was abandoned because AMCL didn't work properly when the robot was repositioned.
+
+Launch arena 3:
+
+    roslaunch p_g06_bringup th_arenas.launch arena:=3
+
+Launch 3 robots of each color (blue, red and green): 
+
+    roslaunch p_g06_multi_robot multi_robot.launch
+
+Launch navigation node (AMCL, Map Server and Move Base):
+
+    roslaunch p_g06_navigation p_g06_navigation.launch
+
+Launch script
+
+    roslaunch oriented_goal one_robot.launch  
 
 [![Blue robot - Oriented Goal with AMCL, Map Server and Move Base](https://img.youtube.com/vi/RV6BOIRpye0/0.jpg)](https://www.youtube.com/watch?v=RV6BOIRpye0 "Blue robot - Oriented Goal with AMCL, Map Server and Move Base")
 
@@ -63,6 +148,22 @@ Use oriented_goal.py script with AMCL, Map Server and Move Base running on one r
 
 Use manual_drive.py (an adaptation of turtlebot_teleop) to control the robot on the FNR track using the keyboard.
 
+Launch world:
+
+    roslaunch p_g06_bringup fnr_course.launch  
+
+Launch robot on start position for teleop:
+
+    roslaunch p_g06_bringup fnr_bringup.launch
+
+Launch camera view:
+
+    rosrun image_view image_view image:=/blue1/camera/rgb/image_raw
+
+Launch teleop:
+
+    rosrun p_g06_drivers manual_drive.py 
+
 [![FNR track - manual drive with keyboard](https://img.youtube.com/vi/h_Sb5vHoZts/0.jpg)](https://www.youtube.com/watch?v=h_Sb5vHoZts "FNR track - manual drive with keyboard")
 
 ####################################################################
@@ -70,6 +171,18 @@ Use manual_drive.py (an adaptation of turtlebot_teleop) to control the robot on 
 **FNR track - Autonomous driving**
 
 Use fnr_auto_drive.py to drive the robot by itself on fnr track.
+
+Launch fnr without obstacles:
+
+    roslaunch p_g06_bringup fnr_no_obs.launch  
+
+Launch robot on start position for follow line:
+
+    roslaunch p_g06_bringup fnr_no_obs_bringup.launch 
+
+Launch "autonomous driving":
+
+    rosrun p_g06_fnr_course fnr_auto_drive.py 
 
 [![FNR track - Autonomous driving](https://img.youtube.com/vi/AuPEjX6V6Ew/0.jpg)](https://www.youtube.com/watch?v=AuPEjX6V6Ew "FNR track - Autonomous driving")
 
