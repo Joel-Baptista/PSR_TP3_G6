@@ -173,7 +173,7 @@ class Driver:
             self.target_flee(self.players)
 
         if self.state == 3 and self.goal is None:
-            print("Need new goal")
+            # print(self.name + " heading to a WALL")
             self.target_avoid_wall(self.players)
 
         if self.state == 4 and self.goal is None:
@@ -323,23 +323,25 @@ class Driver:
         x = wall_closest_in_base_link.pose.position.x
         y = wall_closest_in_base_link.pose.position.y
 
-
         angle = math.atan2(y, x)
         # sign = angle/abs(angle)
         # new_angle = angle + sign * 2 * math.pi/3
 
-        if abs(angle) < math.pi/5:
-            k = 1
-        else:
-            k = 1/2
+        # if abs(angle) < math.pi/5:
+        #     k = 1
+        # else:
+        #     k = 1/2
+        #
+        # if angle < 0:
+        #     new_angle = math.pi * k + angle
+        # else:
+        #     new_angle = math.pi * k - angle
 
-        if angle < 0:
-            new_angle = math.pi * k + angle
-        else:
-            new_angle = math.pi * k - angle
+        new_angle = math.pi + angle
 
         poseStamped.pose.position.x = 2 * math.cos(new_angle)
         poseStamped.pose.position.y = 2 * math.sin(new_angle)
+        print(self.name + " heading to a WALL")
         self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
 
 
@@ -357,7 +359,12 @@ class Driver:
         # goal_exit = self.tf_buffer.transform(self.goal_exit, self.name + "/base_footprint", rospy.Duration(1))
         # print(goal_exit)
 
-        poseStamped.pose.position.x = -1
+        xx = randint(0, 1)
+
+        if xx == 0:
+            xx = -1
+
+        poseStamped.pose.position.x = xx
         poseStamped.pose.position.y = 2 * randint(-1, 1)
 
         self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
