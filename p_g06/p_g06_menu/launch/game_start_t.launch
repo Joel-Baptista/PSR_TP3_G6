@@ -12,13 +12,13 @@
 
         </include>
 
-        <!--Include multi_player_finder.launch-->
-        <include file="$(find p_g06_bringup)/launch/multi_player_finder.launch">
+        <!--Include obstacle_finder.launch-->
+        <include file="$(find p_g06_bringup)/launch/multi_obstacle_finder.launch">
 
         </include>
 
-        <!--Include obstacle_finder.launch-->
-        <include file="$(find p_g06_bringup)/launch/multi_obstacle_finder.launch">
+        <!--Include multi_player_finder.launch-->
+        <include file="$(find p_g06_bringup)/launch/multi_player_finder.launch">
 
         </include>
 
@@ -26,6 +26,8 @@
         <include file="$(find p_g06_bringup)/launch/multi_driver_nav3d.launch">
 
         </include>
+
+
 
         <!--Call referee-->
 <!--        <node name="referee" pkg="th_referee" type="th_referee" output="screen"/>-->
