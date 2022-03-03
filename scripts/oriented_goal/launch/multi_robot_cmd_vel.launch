@@ -1,7 +1,7 @@
 <launch>
 
 
-    <!--    BLUE ROBOT 1-->
+    <!--    BLUE ROBOTS-->
     <!--    <node name="Blue1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">-->
     <node name="Blue1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
 
@@ -17,10 +17,40 @@
 
     </node>
 
+    <node name="Blue2_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
+
+        <param name="robot_name" value="blue2"/>
+        <param name="robot_to_catch_1" value="red1"/>
+        <param name="robot_to_catch_2" value="red2"/>
+        <param name="robot_to_catch_3" value="red3"/>
+        <param name="robot_to_escape_1" value="green1"/>
+        <param name="robot_to_escape_2" value="green2"/>
+        <param name="robot_to_escape_3" value="green3"/>
+
+        <remap from="/blue1/cmd_vel" to="/blue2/cmd_vel"/>
+
+    </node>
+
+    <node name="Blue3_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
+
+        <param name="robot_name" value="blue3"/>
+        <param name="robot_to_catch_1" value="red1"/>
+        <param name="robot_to_catch_2" value="red2"/>
+        <param name="robot_to_catch_3" value="red3"/>
+        <param name="robot_to_escape_1" value="green1"/>
+        <param name="robot_to_escape_2" value="green2"/>
+        <param name="robot_to_escape_3" value="green3"/>
+
+        <remap from="/blue1/cmd_vel" to="/blue3/cmd_vel"/>
+
+    </node>
+
     <!--    *************************************************************-->
 
-    <!--    RED ROBOT 1-->
-    <node name="Red1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">
+    <!--    RED ROBOTS-->
+    <!--    <node name="Red1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">-->
+    <node name="Red1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
+
         <param name="robot_name" value="red1"/>
         <param name="robot_to_catch_1" value="green1"/>
         <param name="robot_to_catch_2" value="green2"/>
@@ -33,10 +63,41 @@
 
     </node>
 
+    <!--    <node name="red2_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">-->
+    <node name="Red2_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
+        <param name="robot_name" value="red2"/>
+        <param name="robot_to_catch_1" value="green1"/>
+        <param name="robot_to_catch_2" value="green2"/>
+        <param name="robot_to_catch_3" value="green3"/>
+        <param name="robot_to_escape_1" value="blue1"/>
+        <param name="robot_to_escape_2" value="blue2"/>
+        <param name="robot_to_escape_3" value="blue3"/>
+
+        <remap from="/blue1/cmd_vel" to="/red2/cmd_vel"/>
+
+    </node>
+
+    <!--    <node name="red3_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">-->
+    <node name="Red3_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
+
+        <param name="robot_name" value="red3"/>
+        <param name="robot_to_catch_1" value="green1"/>
+        <param name="robot_to_catch_2" value="green2"/>
+        <param name="robot_to_catch_3" value="green3"/>
+        <param name="robot_to_escape_1" value="blue1"/>
+        <param name="robot_to_escape_2" value="blue2"/>
+        <param name="robot_to_escape_3" value="blue3"/>
+
+        <remap from="/blue1/cmd_vel" to="/red3/cmd_vel"/>
+
+    </node>
+
     <!--    *************************************************************-->
 
-    <!--    GREEN ROBOT 1-->
-    <node name="Green1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">
+    <!--    GREEN ROBOTS-->
+    <!--    <node name="Green1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">-->
+    <node name="Green1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
+
         <param name="robot_name" value="green1"/>
         <param name="robot_to_catch_1" value="blue1"/>
         <param name="robot_to_catch_2" value="blue2"/>
@@ -46,6 +107,36 @@
         <param name="robot_to_escape_3" value="red3"/>
 
         <remap from="/blue1/cmd_vel" to="/green1/cmd_vel"/>
+
+    </node>
+
+    <!--    <node name="Green1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">-->
+    <node name="Green2_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
+
+        <param name="robot_name" value="green2"/>
+        <param name="robot_to_catch_1" value="blue1"/>
+        <param name="robot_to_catch_2" value="blue2"/>
+        <param name="robot_to_catch_3" value="blue3"/>
+        <param name="robot_to_escape_1" value="red1"/>
+        <param name="robot_to_escape_2" value="red2"/>
+        <param name="robot_to_escape_3" value="red3"/>
+
+        <remap from="/blue1/cmd_vel" to="/green2/cmd_vel"/>
+
+    </node>
+
+    <!--    <node name="Green1_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py" output="screen">-->
+    <node name="Green3_oriented_goal" pkg="oriented_goal" type="oriented_goal_cmd_vel.py">
+
+        <param name="robot_name" value="green3"/>
+        <param name="robot_to_catch_1" value="blue1"/>
+        <param name="robot_to_catch_2" value="blue2"/>
+        <param name="robot_to_catch_3" value="blue3"/>
+        <param name="robot_to_escape_1" value="red1"/>
+        <param name="robot_to_escape_2" value="red2"/>
+        <param name="robot_to_escape_3" value="red3"/>
+
+        <remap from="/blue1/cmd_vel" to="/green3/cmd_vel"/>
 
     </node>
 
