@@ -28,7 +28,7 @@ class Driver:
 
         self.name = self.name[0:idx]
 
-        self.state = 0  # 0 - netrual, 1 - hunting, 2 - fleeing
+        self.state = 0  # 0 - netrual, 1 - hunting, 2 - fleeing; 3 - avoid wall; 4 - find exit
         red_players = rospy.get_param("/red_players")
         blue_players = rospy.get_param("/blue_players")
         green_players = rospy.get_param("/green_players")
@@ -148,12 +148,12 @@ class Driver:
         if not (self.goal is None):
             self.need_new_goal()
 
-        if not (self.goal_exit is None):
-            self.need_new_goal_exit()
-            print("Need new exit")
-
-        if not(self.goal_exit is None):
-            self.goal_exit(self.obstacle_points)
+        # if not(self.goal_exit is None):
+        #     self.need_new_goal_exit()
+        #     print("Need new exit")
+        #
+        # if self.goal_exit is None:
+        #     self.find_exit(self.obstacle_points)
 
         self.choose_state(self.players)
         print(self.state)
@@ -199,7 +199,7 @@ class Driver:
         state = 0
         max_area_norm = 0
 
-        if self.closest_obstacle_dist <= 3:
+        if self.closest_obstacle_dist <= 0.8:
             near_wall = True
 
         for player in players:
@@ -242,6 +242,9 @@ class Driver:
             self.goal = None
 
         if self.state == 1 and near_prey:
+            self.goal = None
+
+        if self.state == 3:
             self.goal = None
 
     def need_new_goal(self, thresh_dist=1.5):
@@ -291,39 +294,42 @@ class Driver:
         x = wall_closest_in_base_link.pose.position.x
         y = wall_closest_in_base_link.pose.position.y
 
-        dist = math.sqrt(x**2 + y**2)
-        print(dist)
-        if dist <= 1:
-            angle = math.atan2(y, x)
-            # sign = angle/abs(angle)
-            # new_angle = angle + sign * 2 * math.pi/3
 
-            if abs(angle) < math.pi/4:
-                k = 1
-            else:
-                k = 1/2
+        angle = math.atan2(y, x)
+        # sign = angle/abs(angle)
+        # new_angle = angle + sign * 2 * math.pi/3
 
-            if angle < 0:
-                new_angle = math.pi * k + angle
-            else:
-                new_angle = math.pi * k - angle
-
-            print(angle)
-            print(new_angle)
-            print(k)
-            poseStamped.pose.position.x = 2 * math.cos(new_angle)
-            poseStamped.pose.position.y = 2 * math.sin(new_angle)
-            self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
+        if abs(angle) < math.pi/4:
+            k = 1
         else:
-            print("goind to exit")
-            self.find_exit(self.obstacle_points)
-            self.goal = self.goal_exit
+            k = 1/2
+
+        if angle < 0:
+            new_angle = math.pi * k + angle
+        else:
+            new_angle = math.pi * k - angle
+
+        print(angle)
+        print(new_angle)
+        print(k)
+        poseStamped.pose.position.x = 2 * math.cos(new_angle)
+        poseStamped.pose.position.y = 2 * math.sin(new_angle)
+        self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
 
 
     def target_neutral(self):
         poseStamped = PoseStamped()
         poseStamped.header.frame_id = self.name + "/base_footprint"
         poseStamped.header.stamp = rospy.Time.now()
+
+        # goal_exit = copy.deepcopy(self.goal_exit)
+        #
+        # x = 2
+        # y = 0
+        #
+        # print(self.goal_exit)
+        # goal_exit = self.tf_buffer.transform(self.goal_exit, self.name + "/base_footprint", rospy.Duration(1))
+        # print(goal_exit)
 
         poseStamped.pose.position.x = 2
         poseStamped.pose.position.y = 0
@@ -402,7 +408,7 @@ class Driver:
 
                 dist = math.sqrt((x_prev - x) ** 2 + (y_prev - y) ** 2)
 
-                if dist >= 0.8:
+                if 0.5 <= dist <= 3:
                     x_mean = (x + x_prev) / 2
                     y_mean = (y + y_prev) / 2
 
@@ -465,13 +471,13 @@ class Driver:
 
         self.angle = math.atan2(y, x)
 
-        if self.state == 0:
+        if self.state == 0 or self.state == 3:
             max_speed = 0.5
 
         if self.state == 1 and dist <= 1.5:
             max_speed = 0.6
 
-        if abs(self.angle) > math.pi - 0.8:
+        if abs(self.angle) > math.pi/4:
             drive_back = -1
         else:
             drive_back = 1
