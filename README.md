@@ -84,7 +84,7 @@ Launch the script for 3 robots of each team
 
 Use oriented_goal_cmd_vel.py script running on one robot for the purpose of demonstration.
 
-Launch arena 3:
+Launch arena 1:
 
     roslaunch p_g06_bringup th_arenas.launch arena:=1
 
@@ -104,7 +104,7 @@ Launch the script for 1 robot:
 
 Use oriented_goal_cmd_vel.py script running on all teams.
 
-Launch arena 3:
+Launch arena 1:
 
     roslaunch p_g06_bringup th_arenas.launch arena:=1
 
@@ -117,6 +117,64 @@ Launch for all robots:
     roslaunch oriented_goal multi_robot_cmd_vel.launch 
 
 [![Team Hunt - Oriented Goal Multi Robot](https://img.youtube.com/vi/g1-Rnxu0qS8/0.jpg)](https://www.youtube.com/watch?v=g1-Rnxu0qS8 "Team Hunt - Oriented Goal Multi Robot")
+
+####################################################################
+
+**Team Hunt - Nav3D goal on robot (demonstration)**
+
+Use driver_nav3d, obstacle_finder e player_finder scriptd running on one robot.
+
+Launch arena 1:
+
+    roslaunch p_g06_bringup th_arenas.launch arena:=1
+
+Launch 3 robots of each color (blue, red and green): 
+
+    roslaunch p_g06_multi_robot multi_robot.launch
+
+Launch for red1 robot: 
+
+    roslaunch scrits_bringup nav3d.launch player_name:=red1 visualize:=True 
+
+####################################################################
+
+**Team Hunt - Nav3D Goal Multi robot**
+
+Use driver_nav3d, obstacle_finder e player_finder scriptd running on one robot.
+
+Launch arena 1:
+
+    roslaunch p_g06_bringup th_arenas.launch arena:=1
+
+Launch 3 robots of each color (blue, red and green): 
+
+    roslaunch p_g06_multi_robot multi_robot.launch
+
+Launch for red1 robot: 
+
+    roslaunch p_g06_bringup multi_nav3d.launch 
+
+####################################################################
+
+**Team Hunt - Green - camera and lidar; Blue - Nav3d; Red - Oriented Goal**
+
+Each team uses a diferent method to perceive the enveironment and the other players:
+
+- Green Team: camera and lidar script;
+- Red Team: Oriented Goal;
+- Blue Team: Nav3D; 
+
+Launch arena 1:
+
+    roslaunch p_g06_bringup th_arenas.launch arena:=3
+
+Launch 3 robots of each color (blue, red and green): 
+
+    roslaunch p_g06_multi_robot multi_robot.launch
+
+Launch for red1 robot: 
+
+    roslaunch p_g06_bringup multi_nav3d.launch 
 
 ####################################################################
 

@@ -1,29 +1,19 @@
 <launch>
 
-    <!--BLUE ROBOT-->
-    <!--    <node pkg="p_g06_camera_and_lidar" name="blue_camera_and_lidar" type="camera_and_lidar.py" output="$(arg output_screen)">-->
-    <node pkg="p_g06_camera_and_lidar" name="blue1_camera_and_lidar" type="camera_and_lidar.py">
-        <param name="robot_color" value="Blue"/>
-        <remap from="blue1/cmd_vel" to="blue1/cmd_vel"/>
-        <remap from="blue1/camera/rgb/image_raw" to="blue1/camera/rgb/image_raw"/>
-        <remap from="blue1/scan" to="blue1/scan"/>
-    </node>
+   <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+        <arg name="player_name" value="blue1"/>
+        <arg name="visualize" value="false"/>
+    </include>
 
-    <!--    <node pkg="p_g06_camera_and_lidar" name="blue_camera_and_lidar" type="camera_and_lidar.py" output="$(arg output_screen)">-->
-    <node pkg="p_g06_camera_and_lidar" name="blue2_camera_and_lidar" type="camera_and_lidar.py">
-        <param name="robot_color" value="Blue"/>
-        <remap from="blue1/cmd_vel" to="blue2/cmd_vel"/>
-        <remap from="blue1/camera/rgb/image_raw" to="blue2/camera/rgb/image_raw"/>
-        <remap from="blue1/scan" to="blue2/scan"/>
-    </node>
+    <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+        <arg name="player_name" value="blue2"/>
+        <arg name="visualize" value="false"/>
+    </include>
 
-    <!--    <node pkg="p_g06_camera_and_lidar" name="blue_camera_and_lidar" type="camera_and_lidar.py" output="$(arg output_screen)">-->
-    <node pkg="p_g06_camera_and_lidar" name="blue3_camera_and_lidar" type="camera_and_lidar.py">
-        <param name="robot_color" value="Blue"/>
-        <remap from="blue1/cmd_vel" to="blue3/cmd_vel"/>
-        <remap from="blue1/camera/rgb/image_raw" to="blue3/camera/rgb/image_raw"/>
-        <remap from="blue1/scan" to="blue3/scan"/>
-    </node>
+    <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+        <arg name="player_name" value="blue3"/>
+        <arg name="visualize" value="false"/>
+    </include>
 
     <!--    *************************************************************-->
 

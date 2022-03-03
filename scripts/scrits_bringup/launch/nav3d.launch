@@ -1,0 +1,20 @@
+<launch>
+
+    <arg name="player_name" default="blue1"/>
+    <arg name="visualize" default="true"/>
+
+    <group ns="$(arg player_name)">
+        <node name="sensors" pkg="p_g06_sensors" type="player_finder" output="screen"/>
+        <param name="camera_visualize" type="bool" value="$(arg visualize)"/>
+    </group>
+
+    <group ns="$(arg player_name)">
+        <node name="obstacle_finder" pkg="p_g06_sensors" type="obstacle_finder" output="screen"/>
+    </group>
+
+
+    <group ns="$(arg player_name)">
+        <node name="nav3d" pkg="p_g06_nav3d" type="driver_nav3d_2" output="screen"/>
+    </group>
+
+</launch>
