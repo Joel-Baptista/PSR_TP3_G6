@@ -8,7 +8,6 @@ Gameplay images:
 ![Screenshot](https://github.com/Joel-Baptista/PSR_TP3_G6/blob/main/Images/arena_3_2.png?raw=true)
 
 Videos:
-
 **Team Hunt - Blue1 gmapping arena 3**
 [![Team Hunt - Blue1 gmapping arena 3](https://img.youtube.com/vi/f2aZTX3FzXc/0.jpg)](http://www.youtube.com/watch?v=f2aZTX3FzXc&t "Team Hunt - Blue1 gmapping arena 3")
 
