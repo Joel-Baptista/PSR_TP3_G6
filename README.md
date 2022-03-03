@@ -1,6 +1,6 @@
 # PSR_TP3_G6
 
-![Screenshot](robots.png)
+![Screenshot]robots.png
 
 
 **Notas reunião alinhamento dia 30-1-2022**
