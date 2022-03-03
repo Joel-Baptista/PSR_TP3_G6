@@ -16,7 +16,7 @@ import tf2_ros
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Twist, PoseStamped, Point, Pose, Vector3, Quaternion
 from p_g06_sensors.msg import PlayerLocation, ObstacleLocation
-
+from random import randint
 
 class Driver:
     def __init__(self):
@@ -67,6 +67,7 @@ class Driver:
         self.goal_exit = None
         self.closest_obstacle_point = None
         self.closest_obstacle_dist = 10000
+        self.closest_mate = None
         self.obstacle_points = None
         self.obstacle_ref = None
 
@@ -174,6 +175,10 @@ class Driver:
             print("Need new goal")
             self.target_avoid_wall(self.players)
 
+        if self.state == 4 and self.closest_mate is None:
+            print("AVOIDING!!!")
+            self.target_avoid_mate(self.players)
+
     def getObstacleLocationCallback(self, msg):
 
         self.obstacle_points = msg.obstacles_points
@@ -219,7 +224,10 @@ class Driver:
                 if area_norm > max_area_norm:
                     max_area_norm = area_norm
 
-        if (near_prey or far_prey) and not near_hunter:  # if there are preys but not near hunters
+            if player["team"] == self.my_team and player["pixels"] is None:
+                near_mate = True
+
+        if (near_prey or far_prey):  # if there are preys but not near hunters
             state = 1
 
         if near_hunter:  # there are near hunters
@@ -261,19 +269,19 @@ class Driver:
         if dist <= thresh_dist:
             self.goal = None
 
-    def need_new_goal_exit(self, thresh_dist=0.5):
-        goal_copy = copy.deepcopy(self.goal_exit)
-        goal_copy.header.stamp = rospy.Time.now()
-
-        goal_in_base_link = self.tf_buffer.transform(goal_copy, self.name + "/base_footprint", rospy.Duration(1))
-
-        x = goal_in_base_link.pose.position.x
-        y = goal_in_base_link.pose.position.y
-
-        dist = math.sqrt(x ** 2 + y ** 2)
-
-        if dist <= thresh_dist:
-            self.goal_exit = None
+    # def need_new_goal_exit(self, thresh_dist=0.5):
+    #     goal_copy = copy.deepcopy(self.goal_exit)
+    #     goal_copy.header.stamp = rospy.Time.now()
+    #
+    #     goal_in_base_link = self.tf_buffer.transform(goal_copy, self.name + "/base_footprint", rospy.Duration(1))
+    #
+    #     x = goal_in_base_link.pose.position.x
+    #     y = goal_in_base_link.pose.position.y
+    #
+    #     dist = math.sqrt(x ** 2 + y ** 2)
+    #
+    #     if dist <= thresh_dist:
+    #         self.goal_exit = None
 
     # <==========================================================================================================>
     # <---------------------------------------------------------------------------------------------------------->
@@ -309,9 +317,6 @@ class Driver:
         else:
             new_angle = math.pi * k - angle
 
-        print(angle)
-        print(new_angle)
-        print(k)
         poseStamped.pose.position.x = 2 * math.cos(new_angle)
         poseStamped.pose.position.y = 2 * math.sin(new_angle)
         self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
@@ -331,9 +336,21 @@ class Driver:
         # goal_exit = self.tf_buffer.transform(self.goal_exit, self.name + "/base_footprint", rospy.Duration(1))
         # print(goal_exit)
 
-        poseStamped.pose.position.x = 2
-        poseStamped.pose.position.y = 0
+        poseStamped.pose.position.x = -1
+        poseStamped.pose.position.y = 2 * randint(-1, 1)
 
+        self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
+
+    def target_avoid_mate(self, players):
+
+        poseStamped = PoseStamped()
+        poseStamped.header.frame_id = self.name + "/base_footprint"
+        poseStamped.header.stamp = rospy.Time.now()
+
+        new_angle = math.pi / 3
+
+        poseStamped.pose.position.x = 2 * math.cos(new_angle)
+        poseStamped.pose.position.y = 2 * math.sin(new_angle)
         self.goal = self.tf_buffer.transform(poseStamped, self.name + "/odom", rospy.Duration(1))
 
     def target_flee(self, players):
@@ -392,40 +409,40 @@ class Driver:
 
         self.goal = target
 
-    def find_exit(self, obstacle_points):
-        goal_exit = None
-        y_mean = None
-        x_mean = None
-        x_prev = 0
-        y_prev = 0
-
-        for i, point in enumerate(obstacle_points.poses):
-
-            x = point.position.x
-            y = point.position.y
-
-            if i > 0:
-
-                dist = math.sqrt((x_prev - x) ** 2 + (y_prev - y) ** 2)
-
-                if 0.5 <= dist <= 3:
-                    x_mean = (x + x_prev) / 2
-                    y_mean = (y + y_prev) / 2
-
-            x_prev = x
-            y_prev = y
-
-        if x_mean is not None:
-
-            poseStamped = PoseStamped()
-            poseStamped.header = Header(stamp=rospy.Time.now(), frame_id=self.name + "/odom")
-
-            poseStamped.pose.position.x = x_mean
-            poseStamped.pose.position.y = y_mean
-
-            goal_exit = poseStamped
-
-        self.goal = goal_exit
+    # def find_exit(self, obstacle_points):
+    #     goal_exit = None
+    #     y_mean = None
+    #     x_mean = None
+    #     x_prev = 0
+    #     y_prev = 0
+    #
+    #     for i, point in enumerate(obstacle_points.poses):
+    #
+    #         x = point.position.x
+    #         y = point.position.y
+    #
+    #         if i > 0:
+    #
+    #             dist = math.sqrt((x_prev - x) ** 2 + (y_prev - y) ** 2)
+    #
+    #             if 0.5 <= dist <= 3:
+    #                 x_mean = (x + x_prev) / 2
+    #                 y_mean = (y + y_prev) / 2
+    #
+    #         x_prev = x
+    #         y_prev = y
+    #
+    #     if x_mean is not None:
+    #
+    #         poseStamped = PoseStamped()
+    #         poseStamped.header = Header(stamp=rospy.Time.now(), frame_id=self.name + "/odom")
+    #
+    #         poseStamped.pose.position.x = x_mean
+    #         poseStamped.pose.position.y = y_mean
+    #
+    #         goal_exit = poseStamped
+    #
+    #     self.goal = goal_exit
 
     # <==========================================================================================================>
     # <---------------------------------------------------------------------------------------------------------->
