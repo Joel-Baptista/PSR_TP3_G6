@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import subprocess
+from colorama import Fore, Back, Style
 import time
 
 
@@ -22,16 +23,16 @@ def main():
     # SELECT ARENA
     # ---------------------------------------------------
 
-    arena = input('Use arena 1,2 or 3?\n')
+    arena = input(Style.BRIGHT + Back.LIGHTYELLOW_EX + Fore.BLACK + '\nWELCOME TO THE TEAM HUNT GAME\n\n' + Style.RESET_ALL + Style.BRIGHT + 'CHOOSE THE ARENA: 1,2 or 3?\n'+ Style.RESET_ALL )
 
     while arena_selected == False:
 
         if arena == '1' or arena == '2' or arena == '3':
             arena_selected = True
-            print('\nSelected arena ' + arena)
+            print(Fore.YELLOW + Style.BRIGHT + ' \nYOU SELECTED THE ARENA ' + arena + Style.RESET_ALL)
         else:
             arena_selected = False
-            arena = input('Arena name not valid! Type 1,2 or 3.\n')
+            arena = input(Fore.LIGHTYELLOW_EX + Style.BRIGHT + 'Arena name not valid! Type 1,2 or 3.\n' + Style.RESET_ALL)
 
     # ---------------------------------------------------
     # SELECT MODE
@@ -47,22 +48,22 @@ def main():
         if mode == 'n':
             mode_selected = True
             custom_mode = False
-            print('\nSelected Normal Mode (3 x 3 x 3)\n')
+            print(Fore.LIGHTBLUE_EX + '\nSelected Normal Mode (3 x 3 x 3)\n' + Style.RESET_ALL)
         elif mode == 't':
             mode_selected = True
             custom_mode = False
-            print('\nSelected Test Mode (3 x 1 x 1)\n')
-        elif mode == 'c' :
+            print(Fore.LIGHTBLUE_EX + '\nSelected Test Mode (3 x 1 x 1)\n' + Style.RESET_ALL)
+        elif mode == 'c':
             mode_selected = True
             custom_mode = True
-            print('\nSelected custom mode. Define how many per team!\n')
+            print(Fore.LIGHTBLUE_EX + '\nSelected custom mode. Define how many per team!\n' + Style.RESET_ALL)
         else:
             mode_selected = False
             custom_mode = False
-            mode = input('\nMode does not exist! Type n,t or c.\n'
+            mode = input(Fore.LIGHTYELLOW_EX + '\nMode does not exist! Type n,t or c.\n'
                          'n - Normal Mode (3R x 3G x 3B)\n'
                          't - Test Mode (3R x 1G x 1B)\n'
-                         'c - Custom mode (Choose number per team)\n')
+                         'c - Custom mode (Choose number per team)\n' + Style.RESET_ALL)
 
     # ---------------------------------------------------
     # CUSTOM MODE PARAMETERS
@@ -76,55 +77,55 @@ def main():
             # CUSTOM MODE PARAMETERS: RED
             # ---------------------------------------------------
 
-            red_number = input('How many Red players? 1,2 or 3?\n')
+            red_number = input(Style.BRIGHT + 'How many' + Fore.RED + ' Red ' + Fore.RESET + 'players? 1,2 or 3?\n' + Style.RESET_ALL)
 
             while red_defined == False:
 
                 if red_number == '1' or red_number == '2' or red_number == '3':
                     red_defined = True
                     print('\n\nNumber of players:\n'
-                          'Red: ' +  red_number + '\n')
+                          + Fore.RED + 'Red: ' + Style.RESET_ALL + red_number + '\n' )
 
                 else:
-                    red_defined= False
-                    red_number = input('Number not valid! Type 1,2 or 3.\n')
+                    red_defined = False
+                    red_number = input(Fore.LIGHTYELLOW_EX + Style.BRIGHT + 'Number not valid! Type 1,2 or 3.\n' + Style.RESET_ALL)
 
             # ---------------------------------------------------
             # CUSTOM MODE PARAMETERS: GREEN
             # ---------------------------------------------------
 
-            green_number = input('How many Green players? 1,2 or 3?\n')
+            green_number = input(Style.BRIGHT + 'How many' + Fore.GREEN + ' Green ' + Fore.RESET + 'players? 1,2 or 3?\n' + Style.RESET_ALL)
 
             while green_defined == False:
 
                 if green_number == '1' or green_number == '2' or green_number == '3':
                     green_defined = True
                     print('\n\nNumber of players:\n'
-                          'Red: ' + red_number + '\n'
-                          'Green: ' + green_number + '\n')
+                          + Fore.RED + 'Red: ' + Style.RESET_ALL + red_number + '\n'
+                          + Fore.GREEN + 'Green: ' + Style.RESET_ALL + green_number + '\n')
 
                 else:
                     green_defined = False
-                    green_number = input('Number not valid! Type 1,2 or 3.\n')
+                    green_number = input(Fore.LIGHTYELLOW_EX + Style.BRIGHT + 'Number not valid! Type 1,2 or 3.\n' + Style.RESET_ALL)
 
             # ---------------------------------------------------
             # CUSTOM MODE PARAMETERS: BLUE
             # ---------------------------------------------------
 
-            blue_number = input('How many Blue players? 1,2 or 3?\n')
+            blue_number = input(Style.BRIGHT + 'How many' + Fore.BLUE + ' Blue ' + Fore.RESET + 'players? 1,2 or 3?\n' + Style.RESET_ALL)
 
             while blue_defined == False:
 
                 if blue_number == '1' or blue_number == '2' or blue_number == '3':
                     blue_defined = True
                     print('\n\nNumber of players:\n'
-                          'Red: ' + red_number + '\n'
-                          'Green: ' + green_number + '\n'
-                          'Blue: ' + blue_number + '\n')
+                          + Fore.RED + 'Red: ' + Style.RESET_ALL + red_number + '\n'
+                          + Fore.GREEN + 'Green: ' + Style.RESET_ALL + green_number + '\n'
+                          + Fore.BLUE + 'Blue: ' + Style.RESET_ALL + blue_number + '\n')
 
                 else:
                     blue_defined = False
-                    blue_number= input('Number not valid! Type 1,2 or 3.\n')
+                    blue_number = input(Fore.LIGHTYELLOW_EX + Style.BRIGHT + 'Number not valid! Type 1,2 or 3.\n' + Style.RESET_ALL)
 
             if red_defined == True and green_defined == True and blue_defined == True:
                 if red_number == blue_number == green_number == '3':
@@ -133,7 +134,7 @@ def main():
                     mode = 't'
                 else:
                     mode = 'c'
-                print('Custom Mode defined.\n')
+                print(Fore.LIGHTBLUE_EX + Style.BRIGHT + 'Custom Mode defined.\n' + Style.RESET_ALL)
                 custom_defined = True
                 continue
 
@@ -141,7 +142,7 @@ def main():
     # LAUNCH GAME
     # ---------------------------------------------------
 
-    start = input('Everything is set. Start game? [Y/n]\n')
+    start = input('Everything is set. START GAME? [Y/n]\n')
 
     if start == 'y' or start == 'Y':
 
