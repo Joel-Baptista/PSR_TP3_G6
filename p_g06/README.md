@@ -1,4 +1,4 @@
-**Launch gazebo with game arena (alterado por Gonçalo):**
+**Launch gazebo with game arena:**
 
 Lança arena 1 por defeito:
 
@@ -30,6 +30,8 @@ Lançar arena 3:
     roslaunch p_g06_bringup visualize.launch player_name:=<robot name>
     
 **Launch gmapping (default = blue1):**
+
+video: https://www.youtube.com/watch?v=f2aZTX3FzXc
 
     roslaunch p_g06_bringup gmapping.launch player_name:=<robot name>
 
