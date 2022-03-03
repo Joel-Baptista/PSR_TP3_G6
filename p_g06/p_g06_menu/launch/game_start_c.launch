@@ -32,6 +32,11 @@
 
         </include>
 
+        <!--Include obstacle_finder.launch-->
+        <include file="$(find p_g06_bringup)/launch/obstacle_finder.launch">
+
+        </include>
+
         <!--Include multi_driver_nav3d.launch-->
         <include file="$(find p_g06_bringup)/launch/multi_driver_nav3d.launch">
 

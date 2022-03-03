@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$USER_HOME$/Desktop/Backups/.idea/Backups.iml" filepath="$USER_HOME$/Desktop/Backups/.idea/Backups.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/PSR_TP3_G6.iml" filepath="$PROJECT_DIR$/.idea/PSR_TP3_G6.iml" />
     </modules>
   </component>
