@@ -150,7 +150,7 @@ Launch 3 robots of each color (blue, red and green):
 
     roslaunch p_g06_multi_robot multi_robot.launch
 
-Launch for red1 robot: 
+Launch for all robots: 
 
     roslaunch p_g06_bringup multi_nav3d.launch 
 
@@ -172,7 +172,11 @@ Launch 3 robots of each color (blue, red and green):
 
     roslaunch p_g06_multi_robot multi_robot.launch
 
-Launch for red1 robot: 
+Launch the referee of the game: 
+
+    rosrun th_referee th_referee
+
+Launch for all robots: 
 
     roslaunch scrits_bringup multi_robot_multi_script.launch 
 
