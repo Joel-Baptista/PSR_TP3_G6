@@ -1,3 +1,5 @@
+Video on 1 robot (demonstration): https://www.youtube.com/watch?v=IFBJfEv4O8o
+
 Video: https://www.youtube.com/watch?v=xCXbXHZ2jH4
 
 This script subscribe to:
