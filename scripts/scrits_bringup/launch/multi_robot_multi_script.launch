@@ -1,16 +1,16 @@
 <launch>
 
-   <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+   <include file="$(find scrits_bringup)/launch/nav3d.launch">
         <arg name="player_name" value="blue1"/>
         <arg name="visualize" value="false"/>
     </include>
 
-    <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+    <include file="$(find scrits_bringup)/launch/nav3d.launch">
         <arg name="player_name" value="blue2"/>
         <arg name="visualize" value="false"/>
     </include>
 
-    <include file="$(find p_g06_bringup)/launch/player_finder.launch">
+    <include file="$(find scrits_bringup)/launch/nav3d.launch">
         <arg name="player_name" value="blue3"/>
         <arg name="visualize" value="false"/>
     </include>

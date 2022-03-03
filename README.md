@@ -166,7 +166,7 @@ Each team uses a diferent method to perceive the enveironment and the other play
 
 Launch arena 1:
 
-    roslaunch p_g06_bringup th_arenas.launch arena:=3
+    roslaunch p_g06_bringup th_arenas.launch arena:=1
 
 Launch 3 robots of each color (blue, red and green): 
 
@@ -174,7 +174,7 @@ Launch 3 robots of each color (blue, red and green):
 
 Launch for red1 robot: 
 
-    roslaunch p_g06_bringup multi_nav3d.launch 
+    roslaunch scrits_bringup multi_robot_multi_script.launch 
 
 ####################################################################
 
