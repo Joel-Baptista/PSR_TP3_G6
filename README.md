@@ -183,6 +183,10 @@ Launch for all robots:
 
     roslaunch scrits_bringup multi_robot_multi_script.launch 
 
+
+[![Team Hunt - Green - camera and lidar; Blue - Nav3d; Red - Oriented Goal](https://img.youtube.com/vi/5rRuRTNNV2U/0.jpg)](https://www.youtube.com/watch?v=5rRuRTNNV2U "eam Hunt - Green - camera and lidar; Blue - Nav3d; Red - Oriented Goal")
+
+
 ####################################################################
 
 **Blue robot - Oriented Goal with AMCL, Map Server and Move Base**
