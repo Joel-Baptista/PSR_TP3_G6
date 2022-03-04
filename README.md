@@ -257,6 +257,7 @@ Launch options_menu:
 
     rosrun p_g06_menu options_menu
   
+![img.png](img.png)
 
 ####################################################################
 
