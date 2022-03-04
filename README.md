@@ -136,6 +136,9 @@ Launch for red1 robot:
 
     roslaunch scrits_bringup nav3d.launch player_name:=red1 visualize:=True 
 
+[![Team Hunt - Nav3D goal on robot (demonstration)](https://img.youtube.com/vi/Aq9nJvoMNLg/0.jpg)](https://www.youtube.com/watch?v=Aq9nJvoMNLg "Team Hunt - Nav3D goal on robot (demonstration)")
+
+
 ####################################################################
 
 **Team Hunt - Nav3D Goal Multi robot**
@@ -158,7 +161,7 @@ Launch for all robots:
 
 **Team Hunt - Green - camera and lidar; Blue - Nav3d; Red - Oriented Goal**
 
-Each team uses a diferent method to perceive the enveironment and the other players:
+Each team uses a different method to perceive the environment and the other players:
 
 - Green Team: camera and lidar script;
 - Red Team: Oriented Goal;
